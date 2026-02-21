@@ -3,35 +3,55 @@ import time
 import random
 import sys
 import threading
+import os
 
 # ANSI Colors for Hacker Aesthetic
 GREEN = "\033[92m"
 RED = "\033[91m"
 YELLOW = "\033[93m"
+CYAN = "\033[96m"
 RESET = "\033[0m"
+BOLD = "\033[1m"
 
 API_URL = "http://127.0.0.1:8000/verify"
 
-def print_banner():
-    print(requests.get(API_URL).text) # ensure server is up
-    print(f"{GREEN}")
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def print_header():
+    clear_screen()
+    print(f"{RED}{BOLD}")
     print("========================================")
-    print("      ATTACKER TERMINAL - v1.0          ")
+    print("      🔴 ATTACKER CONSOLE v2.0          ")
+    print("      Target: Government API Gateway    ")
     print("========================================")
     print(f"{RESET}")
+    print("Use this terminal to launch simulated cyber-attacks.")
+    print("Observe the DEFENDER DASHBOARD to see the reaction.\n")
 
-def send_request(payload):
+def send_request(payload, quiet=False):
     try:
         response = requests.post(API_URL, json=payload)
+        risk = response.json().get('risk_score', 0)
+        
         if response.status_code == 200:
-            print(f"{GREEN}[+] SUCCESS: Payload delivered (Risk: {response.json().get('risk_score', 0):.2f}){RESET}")
+            if not quiet:
+                print(f"{GREEN}[✓] 200 OK | PASSED | Risk: {risk:.2f} | Payload: {payload['payload_size_kb']}KB{RESET}")
+            return "PASSED"
         elif response.status_code == 403:
-            print(f"{RED}[!] BLOCKED: Target Defense Active (Risk: {response.json().get('detail', {}).get('risk_score', 0):.2f}){RESET}")
-    except requests.exceptions.ConnectionError:
-        print(f"{YELLOW}[!] ERROR: Cannot connect to Target (Server Down?){RESET}")
+            if not quiet:
+                print(f"{RED}[X] 403 BLOCKED | Risk: {response.json()['detail']['risk_score']:.2f} | Reason: Anomaly Detected{RESET}")
+            return "BLOCKED"
+    except Exception as e:
+        print(f"{YELLOW}[!] Connection Error (Is app.py running?){RESET}")
+        return "ERROR"
 
 def normal_behavior():
-    print(f"{GREEN}[*] Simulating Background Noise (Normal Users)...{RESET}")
+    print(f"\n{CYAN}--- SCENARIO 1: NORMAL TRAFFIC ---{RESET}")
+    print("Simulating legitimate users accessing their profiles...")
+    print("Expected Result: GREEN lines, Low Risk Scores.\n")
+    time.sleep(1)
+    
     for i in range(10):
         payload = {
             "hour": random.randint(9, 17),
@@ -41,70 +61,68 @@ def normal_behavior():
             "endpoint": "/user_profile"
         }
         send_request(payload)
-        time.sleep(1)
+        time.sleep(0.8)
+    print(f"\n{GREEN}[✓] Normal Simulation Complete.{RESET}")
 
 def brute_force_attack():
-    print(f"{RED}[*] INITIATING BRUTE FORCE (Credential Stuffing)...{RESET}")
-    for i in range(20):
-        print(f"{YELLOW}[*] Testing Credential Pair: admin:{random.randint(1000,9999)}{RESET}")
+    print(f"\n{YELLOW}--- SCENARIO 2: BRUTE FORCE ATTACK ---{RESET}")
+    print("Attempting credential stuffing at high velocity...")
+    print("Targeting: /admin_login at 3:00 AM")
+    print("Expected Result: RED spikes, Blocked Requests.\n")
+    time.sleep(2)
+
+    for i in range(15):
+        rate = 150 + (i * 20)
+        print(f"{YELLOW}[*] Attempt {i+1}: Rate={rate} req/min...{RESET}", end=" ")
         payload = {
-            "hour": 3,  # suspicious hour
-            "request_rate": 150 + (i * 10), # rising rate
+            "hour": 3,
+            "request_rate": rate,
             "payload_size_kb": 2,
             "geo_location": "India", 
-            "endpoint": "/admin_login" # risky endpoint
+            "endpoint": "/admin_login"
         }
         send_request(payload)
-        time.sleep(0.2)
+        time.sleep(0.3)
+    print(f"\n{RED}[!] Attack Sequence Finished.{RESET}")
 
 def scraping_attack():
-    print(f"{RED}[*] STARTING AADHAAR DATA SCRAPING (Bulk Export)...{RESET}")
-    for i in range(15):
-        print(f"{YELLOW}[*] Downloading Batch: {i+1}/15 (Size: {50 + (i*5)}KB){RESET}")
+    print(f"\n{YELLOW}--- SCENARIO 3: DATA SCRAPING ---{RESET}")
+    print("Attempting to download massive datasets (Bulk Export)...")
+    print("Source: Foreign IP (Russia)")
+    print("Expected Result: Immediate blockage due to Payload Size & Geo.\n")
+    time.sleep(2)
+
+    for i in range(10):
+        size = 50 + (i * 10)
+        print(f"{YELLOW}[*] Requesting Batch {i+1}: Size={size}KB...{RESET}", end=" ")
         payload = {
-            "hour": 2, # suspicious
+            "hour": 2,
             "request_rate": 20, 
-            "payload_size_kb": 50 + (i * 10), # large payload
-            "geo_location": "Russia", # foreign IP
+            "payload_size_kb": size,
+            "geo_location": "Russia", 
             "endpoint": "/bulk_export"
         }
         send_request(payload)
-        time.sleep(0.5)
-
-def ddos_attack():
-    print(f"{RED}[*] LAUNCHING DDoS (Distributed Denial of Service)...{RESET}")
-    # Launch multiple threads to simulate concurrent hits
-    def single_hit():
-        payload = {
-            "hour": 4,
-            "request_rate": 1000,
-            "payload_size_kb": 1,
-            "geo_location": "Tor_Exit",
-            "endpoint": "/verify"
-        }
-        send_request(payload)
-
-    threads = []
-    for _ in range(50):
-        t = threading.Thread(target=single_hit)
-        threads.append(t)
-        t.start()
-    
-    for t in threads:
-        t.join()
-    print(f"{RED}[!] Massive Traffic Wave Sent.{RESET}")
-
+        time.sleep(0.8)
+    print(f"\n{RED}[!] Scraping Attempt Finished.{RESET}")
 
 if __name__ == "__main__":
+    # check connectivity first
+    try:
+        requests.get("http://127.0.0.1:8000")
+    except:
+        print(f"{RED}[!] ERROR: Cannot connect to API Gateway.")
+        print(f"    Please run 'python app.py' in a separate terminal first.{RESET}")
+        sys.exit()
+
     while True:
-        print_banner()
-        print("1. 🟢 Normal User Sim")
-        print("2. 🔴 Brute Force Attack")
-        print("3. 🔴 Data Scraping Attack")
-        print("4. 💀 DDoS Attack")
-        print("5. Exit")
+        print_header()
+        print(f"{GREEN}1. [NORMAL]   Simulate Regular User Traffic{RESET}")
+        print(f"{YELLOW}2. [ATTACK]   Launch Brute Force Attack (Velocity Test){RESET}")
+        print(f"{RED}3. [ATTACK]   Launch Data Scraping (Payload/Geo Test){RESET}")
+        print(f"{CYAN}4. [EXIT]     Quit Console{RESET}")
         
-        choice = input(f"{GREEN}\nroot@kali:~# {RESET}")
+        choice = input(f"\n{BOLD}Select Command > {RESET}")
         
         if choice == '1':
             normal_behavior()
@@ -113,10 +131,6 @@ if __name__ == "__main__":
         elif choice == '3':
             scraping_attack()
         elif choice == '4':
-            ddos_attack()
-        elif choice == '5':
             sys.exit()
-        else:
-            print("Invalid command.")
         
-        input("\nPress Enter to continue...")
+        input(f"\n{CYAN}[Press Enter to return to menu]{RESET}")

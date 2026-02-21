@@ -20,26 +20,70 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
-venv/
-env/
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
 .env
-.venv/
+.venv
+env/
+venv/
 ENV/
+env.bak/
+venv.bak/
 
 # IDE and Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
+.spyderproject
+.spyproject
+.ropeproject
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
 # OS related files
 .DS_Store
-Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+[Tt]humbs.db
 desktop.ini
 
 # Project specific data and models
@@ -51,3 +95,8 @@ data/traffic_logs.csv
 *.sqlite
 *.sqlite3
 *.db
+
+# AI Assistant generated artifacts
+implementation_plan.md
+walkthrough.md
+task.md
