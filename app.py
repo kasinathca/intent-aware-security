@@ -260,7 +260,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             entry = {
                 "timestamp": time.time(),
                 "status": "BLOCKED",
-                "risk_score": 1.0,  # Maximum risk for missing ZKP
+                "risk_score": -1.0,  # Maximum risk for missing ZKP
                 "geo": log.geo_location,
                 "endpoint": log.endpoint,
                 "rate": log.request_rate,
@@ -272,7 +272,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "reason": "ZKP proof required",
                 "layer": "ZKP"
             })
@@ -287,7 +287,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             entry = {
                 "timestamp": time.time(),
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "geo": log.geo_location,
                 "endpoint": log.endpoint,
                 "rate": log.request_rate,
@@ -299,7 +299,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "reason": "User not registered",
                 "layer": "ZKP"
             })
@@ -315,7 +315,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             entry = {
                 "timestamp": time.time(),
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "geo": log.geo_location,
                 "endpoint": log.endpoint,
                 "rate": log.request_rate,
@@ -327,7 +327,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "reason": "Challenge expired or already used",
                 "layer": "ZKP"
             })
@@ -340,7 +340,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             entry = {
                 "timestamp": time.time(),
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "geo": log.geo_location,
                 "endpoint": log.endpoint,
                 "rate": log.request_rate,
@@ -352,7 +352,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "reason": "Challenge mismatch",
                 "layer": "ZKP"
             })
@@ -368,7 +368,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             entry = {
                 "timestamp": time.time(),
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "geo": log.geo_location,
                 "endpoint": log.endpoint,
                 "rate": log.request_rate,
@@ -380,7 +380,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "reason": f"Invalid signature: {str(e)}",
                 "layer": "ZKP"
             })
@@ -393,7 +393,7 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             entry = {
                 "timestamp": time.time(),
                 "status": "BLOCKED",
-                "risk_score": 1.0,
+                "risk_score": -1.0,
                 "geo": log.geo_location,
                 "endpoint": log.endpoint,
                 "rate": log.request_rate,
