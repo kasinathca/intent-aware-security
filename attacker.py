@@ -40,8 +40,10 @@ def send_request(payload, quiet=False):
             return "PASSED"
         elif response.status_code == 403:
             if not quiet:
-                risk_blocked = response.json().get('detail', {}).get('risk_score', -1.0)
-                print(f"{RED}[BLOCKED] 403 FORBIDDEN | Risk: {risk_blocked:.2f} | Reason: Anomaly Detected{RESET}")
+                detail = response.json().get('detail', {})
+                risk_blocked = detail.get('risk_score', -1.0)
+                reason = detail.get('reason', 'Anomaly Detected')
+                print(f"{RED}[BLOCKED] 403 FORBIDDEN | Risk: {risk_blocked:.2f} | Reason: {reason}{RESET}")
             return "BLOCKED"
     except requests.exceptions.RequestException as e:
         print(f"{YELLOW}[!] Connection Error: {e} (Is app.py running?){RESET}")

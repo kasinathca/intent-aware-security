@@ -446,7 +446,7 @@ function buildStepsB() {
             apply() {
                 setStepHighlight('good-s1', 'done');
                 setStepHighlight('good-s2', 'active');
-                gwLog('Policy: ZKP-Enhaced (Draft 2026)');
+                gwLog('Policy: ZKP-Enhanced (Draft 2026)');
                 gwLog('<span class="lt-info">Generating Cryptographic Nonce (32-byte)</span>');
                 gwLog('>> Sending Challenge to Device (HTTPS)');
                 gwStatus('ZKP PENDING', 'gw-wait');
