@@ -5,3 +5,4 @@ fastapi
 uvicorn
 requests
 joblib
+cryptography

@@ -267,6 +267,8 @@
         &copy; 2025 Ministry of Road Transport & Highways. All Rights Reserved. | NIC Designed & Developed
     </footer>
 
+    <!-- ZKP Client Library -->
+    <script src="zkp-client.js"></script>
     <script>
         const LOG_CONTAINER = document.getElementById('activity-log');
         const BTN_AUTO = document.getElementById('btn-auto');
@@ -278,6 +280,10 @@
         let isAutoPilot = false;
         let autoTimeout = null;
         let typeTimeout = null;
+
+        // ZKP Client Instance
+        let zkpClient = null;
+        let zkpEnabled = true;  // Toggle for ZKP authentication
 
         // Web Worker for background-safe timing
         let timerWorker = null;
@@ -348,6 +354,29 @@
             LOG_CONTAINER.insertBefore(div, LOG_CONTAINER.firstChild);
         }
 
+        // Initialize ZKP on page load
+        async function initializeZKP() {
+            try {
+                addLog('[ZKP] Initializing cryptographic authentication...');
+                zkpClient = new ZKPClient('portal_user_001');
+                const success = await zkpClient.initialize();
+
+                if (success) {
+                    addLog('[ZKP] Authentication ready - All requests will be cryptographically signed');
+                } else {
+                    addLog('[ZKP] Warning: Authentication initialization failed - Falling back to legacy mode', 'warn');
+                    zkpEnabled = false;
+                }
+            } catch (error) {
+                console.error('[ZKP] Initialization error:', error);
+                addLog('[ZKP] Error: ' + error.message, 'error');
+                zkpEnabled = false;
+            }
+        }
+
+        // Call ZKP initialization on load
+        window.addEventListener('DOMContentLoaded', initializeZKP);
+
         async function sendVerificationRequest(data) {
             addLog("Sending verification request...", "processing");
 
@@ -360,16 +389,37 @@
                     endpoint: "/verify_license"
                 };
 
-                const response = await fetch('/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                let response, result;
 
-                const result = await response.json();
+                // Use ZKP authentication if enabled
+                if (zkpEnabled && zkpClient && zkpClient.isInitialized) {
+                    try {
+                        addLog("[ZKP] Creating cryptographic proof...");
+                        result = await zkpClient.sendAuthenticatedRequest(payload);
+                        addLog("[ZKP] Request authenticated successfully");
+                    } catch (zkpError) {
+                        addLog(`[ZKP] Authentication failed: ${zkpError.message}`, "error");
+                        // Fall back to legacy endpoint
+                        response = await fetch('/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        result = await response.json();
+                    }
+                } else {
+                    // Legacy mode (no ZKP)
+                    response = await fetch('/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    result = await response.json();
+                }
 
                 if (result.status === "ALLOWED") {
-                    addLog(`✓ Details Verified. ID: ${data.dl} (Risk: ${result.risk_score.toFixed(2)})`, "success");
+                    const zkpBadge = result.zkp_verified ? " [ZKP-VERIFIED]" : "";
+                    addLog(`✓ Details Verified. ID: ${data.dl} (Risk: ${result.risk_score.toFixed(2)})${zkpBadge}`, "success");
                 } else {
                     addLog(`X Access Denied. ID: ${data.dl} (Risk: ${result.risk_score.toFixed(2)})`, "error");
                 }
