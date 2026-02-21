@@ -426,6 +426,17 @@ body {
     background-size: 30px 30px;
     color: white;
     border-top: 4px solid var(--nic-blue);
+    transition: background-color 0.8s ease;
+}
+
+.sim-section.breach-alert {
+    background-color: #3b1b05;
+    /* Slight orange tint */
+}
+
+.sim-section.secure-alert {
+    background-color: #052b14;
+    /* Slight green tint */
 }
 
 .sim-section h3 {

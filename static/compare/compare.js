@@ -176,6 +176,7 @@ function resetSim() {
         .forEach(id => setStepHighlight(id, null));
     document.getElementById('result-bad').classList.remove('show');
     document.getElementById('result-good').classList.remove('show');
+    document.querySelector('.sim-section').classList.remove('breach-alert', 'secure-alert');
 
     updateNav();
 }
@@ -392,6 +393,7 @@ function buildStepsA() {
                 document.getElementById('v-action-btn').style.display = 'block';
                 document.getElementById('result-bad').classList.add('show');
                 laptopLine('<span class="lt-ok">[SUCCESS] Auth Token Received! Dumping user data...</span>');
+                document.querySelector('.sim-section').classList.add('breach-alert');
             },
             undo() {
                 setStepHighlight('bad-s4', 'active');
@@ -400,6 +402,7 @@ function buildStepsA() {
                 document.getElementById('result-bad').classList.remove('show');
                 const t = document.getElementById('laptop-term');
                 t.removeChild(t.lastChild);
+                document.querySelector('.sim-section').classList.remove('breach-alert');
             }
         }
     ];
@@ -541,6 +544,7 @@ function buildStepsB() {
                 document.getElementById('result-good').classList.add('show');
 
                 laptopLine('<span class="lt-err">[FATAL] Auth Failed. Server rejected request.</span>');
+                document.querySelector('.sim-section').classList.add('secure-alert');
             },
             undo() {
                 setStepHighlight('good-s3', 'active');
@@ -552,6 +556,7 @@ function buildStepsB() {
                 document.getElementById('result-good').classList.remove('show');
                 const t = document.getElementById('laptop-term');
                 t.removeChild(t.lastChild);
+                document.querySelector('.sim-section').classList.remove('secure-alert');
             }
         }
     ];
