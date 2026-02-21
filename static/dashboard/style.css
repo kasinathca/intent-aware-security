@@ -259,6 +259,80 @@ td {
 }
 
 .row-blocked {
-    background-color: #fff0f0;
-    color: #dc3545;
+    background-color: #ffe6e6 !important;
+    font-weight: 600;
+}
+
+/* === ZKP STYLES === */
+
+/* ZKP Metric Cards */
+.zkp-metric-card {
+    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
+}
+
+/* ZKP Success Rate Indicator */
+.zkp-indicator {
+    font-size: 1.2em;
+    margin-left: 8px;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ZKP Badges in Activity Log */
+.zkp-badge {
+    background-color: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.zkp-failed {
+    background-color: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.zkp-badge-none {
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+/* Security Toggle Status Badges */
+.status-badge {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.enabled {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.disabled {
+    background: #f8d7da;
+    color: #721c24;
 }

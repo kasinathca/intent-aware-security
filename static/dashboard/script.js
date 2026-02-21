@@ -5,6 +5,7 @@ const MAX_DATA_POINTS = 30; // Keep 30 points for rolling window
 // --- STATE ---
 let trafficChart;
 let scatterChart;
+let zkpChart;
 let isAutoRefresh = true;
 let refreshRate = 1000;
 let refreshTimer = null;
@@ -53,6 +54,64 @@ function setupControls() {
             startPolling();
         }
     });
+
+    // Security toggle event listeners
+    const zkpToggle = document.getElementById('zkp-toggle');
+    const mlToggle = document.getElementById('ml-toggle');
+
+    zkpToggle.addEventListener('change', async (e) => {
+        const enabled = e.target.checked;
+        await updateSecurityConfig('zkp_enabled', enabled);
+        updateStatusBadge('zkp-status', enabled);
+    });
+
+    mlToggle.addEventListener('change', async (e) => {
+        const enabled = e.target.checked;
+        await updateSecurityConfig('ml_enabled', enabled);
+        updateStatusBadge('ml-status', enabled);
+    });
+
+    // Load initial security config
+    loadSecurityConfig();
+}
+
+async function updateSecurityConfig(key, value) {
+    try {
+        const response = await fetch('/security/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [key]: value })
+        });
+        const config = await response.json();
+        console.log('Security config updated:', config);
+    } catch (error) {
+        console.error('Failed to update security config:', error);
+    }
+}
+
+function updateStatusBadge(elementId, enabled) {
+    const badge = document.getElementById(elementId);
+    if (enabled) {
+        badge.textContent = 'ON';
+        badge.className = 'status-badge enabled';
+    } else {
+        badge.textContent = 'OFF';
+        badge.className = 'status-badge disabled';
+    }
+}
+
+async function loadSecurityConfig() {
+    try {
+        const response = await fetch('/security/config');
+        const config = await response.json();
+
+        document.getElementById('zkp-toggle').checked = config.zkp_enabled;
+        document.getElementById('ml-toggle').checked = config.ml_enabled;
+        updateStatusBadge('zkp-status', config.zkp_enabled);
+        updateStatusBadge('ml-status', config.ml_enabled);
+    } catch (error) {
+        console.error('Failed to load security config:', error);
+    }
 }
 
 function startPolling() {
@@ -190,6 +249,45 @@ function initCharts() {
             }
         });
 
+        // 3. ZKP Authentication Pie Chart
+        const ctxZKP = document.getElementById('zkpChart').getContext('2d');
+        zkpChart = new Chart(ctxZKP, {
+            type: 'pie',
+            data: {
+                labels: ['ZKP-Enabled', 'Legacy (No ZKP)'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#28a745', '#6c757d'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
     } catch (e) {
 
     }
@@ -244,49 +342,51 @@ async function fetchData() {
 }
 
 function updateUI(stats, logs) {
-    // Metrics
-    document.getElementById('m-total').textContent = stats.total_requests.toLocaleString();
-    document.getElementById('m-blocked').textContent = stats.blocked_requests.toLocaleString();
+    // Update Metrics
+    document.getElementById('m-total').textContent = stats.total_requests;
+    document.getElementById('m-blocked').textContent = stats.blocked_requests;
 
-    // Uptime / Integrity Calculation
+    // Update Pass Rate
+    const passRate = stats.pass_rate || 1.0;
+    document.getElementById('m-pass-rate').textContent = `${(passRate * 100).toFixed(1)}%`;
+
+    // Update ZKP Pie Chart
+    const zkpEnabled = stats.zkp_enabled_requests || 0;
+    const legacyRequests = stats.total_requests - zkpEnabled;
+    zkpChart.data.datasets[0].data = [zkpEnabled, legacyRequests];
+    zkpChart.update('none'); // Update without animation
+
+    // Threat Level Assessment
     const failRate = (stats.blocked_requests / Math.max(1, stats.total_requests));
-    const integrity = (100 - (failRate * 100)).toFixed(1);
-    document.getElementById('m-uptime').textContent = integrity + '%';
 
     // Logic: Check last 15 logs for blocks
     const recentLogs = logs.slice(-15);
     const recentBlocks = recentLogs.filter(l => l.status === 'BLOCKED').length;
 
     const statusBox = document.getElementById('system-status-box');
-    const threatM = document.getElementById('m-threat');
-    const threatVal = document.getElementById('m-threat');
     const attackIndicator = document.getElementById('attack-indicator');
 
     if (recentBlocks > 2) {
         statusBox.className = 'status-critical'; // Uses style.css class
         statusBox.textContent = "SYSTEM STATUS: CRITICAL ALERT - INTRUSION DETECTED";
-        threatVal.textContent = "Critical";
-        threatVal.parentElement.style.borderLeft = "4px solid #dc3545";
 
         // Update attack indicator
         if (attackIndicator) {
             attackIndicator.style.background = '#f8d7da';
             attackIndicator.style.borderLeft = '4px solid #dc3545';
             attackIndicator.style.color = '#721c24';
-            attackIndicator.innerHTML = `<b>⚠ UNDER ATTACK</b><br><small>${recentBlocks} threats in last 15 requests</small>`;
+            attackIndicator.innerHTML = '<b>WARNING: UNDER ATTACK</b><br><small>' + recentBlocks + ' threats in last 15 requests</small>';
         }
     } else {
         statusBox.className = 'status-normal';
-        statusBox.textContent = "SYSTEM STATUS: NORMAL"; // NIC default state
-        threatVal.textContent = "Low";
-        threatVal.parentElement.style.borderLeft = "4px solid #28a745";
+        statusBox.textContent = "SYSTEM STATUS: OPERATIONAL - ALL SYSTEMS NOMINAL";
 
         // Update attack indicator
         if (attackIndicator) {
             attackIndicator.style.background = '#e9f7ef';
             attackIndicator.style.borderLeft = '4px solid #28a745';
             attackIndicator.style.color = '#155724';
-            attackIndicator.textContent = 'NO ACTIVE ATTACK';
+            attackIndicator.innerHTML = 'NO ACTIVE ATTACK';
         }
     }
 
@@ -303,12 +403,29 @@ function updateUI(stats, logs) {
         const date = new Date(log.timestamp * 1000);
         const timeStr = date.toLocaleTimeString('en-GB'); // HH:MM:SS format
 
+        // ZKP Status Badge
+        let zkpBadge = '<span class="zkp-badge-none" style="opacity: 0.5;">N/A</span>';
+        if (log.zkp_verified === true) {
+            zkpBadge = '<span class="zkp-badge">✓ VERIFIED</span>';
+        } else if (log.zkp_verified === false) {
+            zkpBadge = '<span class="zkp-failed">✗ FAILED</span>';
+        }
+
+        // Blocked By Badge
+        let blockedByBadge = '<span style="color: #6c757d;">--</span>';
+        if (log.blocked_by) {
+            const layerColor = log.blocked_by === 'ZKP' ? '#dc3545' : '#ff9933';
+            blockedByBadge = `<span style="color: ${layerColor}; font-weight: 600;">${log.blocked_by}</span>`;
+        }
+
         row.innerHTML = `
             <td>${timeStr}</td>
             <td><b>${log.status}</b></td>
             <td>${log.endpoint}</td>
             <td>${log.geo}</td>
             <td>${log.risk_score.toFixed(3)}</td>
+            <td>${zkpBadge}</td>
+            <td>${blockedByBadge}</td>
         `;
         tbody.appendChild(row);
     });

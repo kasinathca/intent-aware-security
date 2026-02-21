@@ -23,6 +23,12 @@ stats = {
 # Store last 50 logs for live dashboard
 recent_logs = deque(maxlen=50)
 
+# Security Configuration (toggleable for demonstration)
+security_config = {
+    "zkp_enabled": True,
+    "ml_enabled": True
+}
+
 # ZKP Infrastructure
 user_public_keys = {}  # Store registered user public keys
 challenge_store = crypto_utils.ChallengeStore(expiry_seconds=60)
@@ -62,6 +68,7 @@ app.add_middleware(
 app.mount("/portal", StaticFiles(directory="static/portal"), name="portal")
 app.mount("/hacker", StaticFiles(directory="static/hacker"), name="hacker")
 app.mount("/dashboard", StaticFiles(directory="static/dashboard", html=True), name="dashboard")
+app.mount("/demo", StaticFiles(directory="static/demo", html=True), name="demo")
 
 # Request Models
 class TrafficLog(BaseModel):
@@ -107,12 +114,37 @@ def get_stats():
         "pass_rate": round(1 - (stats["blocked_requests"] / max(1, stats["total_requests"])), 2),
         "zkp_success_rate": round(
             1 - (stats["zkp_failures"] / max(1, stats["zkp_enabled_requests"])), 2
-        ) if stats["zkp_enabled_requests"] > 0 else 0
+        ) if stats["zkp_enabled_requests"] > 0 else 1.0,
+        "security_config": security_config  # Include toggle states
     }
 
 @app.get("/logs")
 def get_logs():
     return list(recent_logs)
+
+# ============ SECURITY CONFIGURATION ENDPOINTS ============
+
+@app.get("/security/config")
+def get_security_config():
+    """Get current security layer configuration"""
+    return security_config
+
+@app.post("/security/config")
+def update_security_config(config: dict):
+    """Update security layer configuration (toggle ZKP/ML)"""
+    global security_config
+    
+    if "zkp_enabled" in config:
+        security_config["zkp_enabled"] = bool(config["zkp_enabled"])
+    if "ml_enabled" in config:
+        security_config["ml_enabled"] = bool(config["ml_enabled"])
+    
+    return {
+        "status": "updated",
+        "config": security_config
+    }
+
+# ============ LEGACY VERIFICATION ENDPOINT ============
 
 @app.post(config.VERIFY_ENDPOINT)
 def verify_request(log: TrafficLog):
@@ -149,7 +181,8 @@ def verify_request(log: TrafficLog):
         "geo": log.geo_location,
         "endpoint": log.endpoint,
         "rate": log.request_rate,
-        "payload": log.payload_size_kb
+        "payload": log.payload_size_kb,
+        "zkp_verified": None  # Legacy endpoint - ZKP not applicable
     }
     
     # Logic: If prediction is -1, BLOCK
@@ -208,22 +241,65 @@ def get_zkp_challenge(user_id: str):
 @app.post("/verify_zkp")
 def verify_request_with_zkp(log: TrafficLogWithZKP):
     """
-    Enhanced verification endpoint with ZKP authentication.
-    Implements two-layer defense: ZKP (Layer 1) + Behavioral ML (Layer 2)
+    Enhanced verification endpoint with toggleable ZKP and ML layers.
+    Demonstrates security effectiveness progression.
     """
     global stats
     stats["total_requests"] += 1
     
-    # LAYER 1: ZKP AUTHENTICATION (if proof provided)
-    zkp_verified = False
-    if log.zkp_proof:
+    zkp_verified = None  # Default to None (N/A) if disabled
+    
+    # LAYER 1: ZKP AUTHENTICATION (if enabled)
+    if security_config["zkp_enabled"]:
+        # Check if ZKP proof is provided
+        if not log.zkp_proof:
+            stats["zkp_failures"] += 1
+            stats["blocked_requests"] += 1
+            
+            # Log the blocked request
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": 1.0,  # Maximum risk for missing ZKP
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": False,
+                "blocked_by": "ZKP"
+            }
+            recent_logs.append(entry)
+            
+            raise HTTPException(status_code=403, detail={
+                "status": "BLOCKED",
+                "risk_score": 1.0,
+                "reason": "ZKP proof required",
+                "layer": "ZKP"
+            })
+        
         stats["zkp_enabled_requests"] += 1
         
         # Get user's public key
         if log.zkp_proof.user_id not in user_public_keys:
             stats["zkp_failures"] += 1
+            stats["blocked_requests"] += 1
+            
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": 1.0,
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": False,
+                "blocked_by": "ZKP"
+            }
+            recent_logs.append(entry)
+            
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
+                "risk_score": 1.0,
                 "reason": "User not registered",
                 "layer": "ZKP"
             })
@@ -234,8 +310,24 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
         stored_challenge = challenge_store.get_challenge(log.zkp_proof.user_id)
         if stored_challenge is None:
             stats["zkp_failures"] += 1
+            stats["blocked_requests"] += 1
+            
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": 1.0,
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": False,
+                "blocked_by": "ZKP"
+            }
+            recent_logs.append(entry)
+            
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
+                "risk_score": 1.0,
                 "reason": "Challenge expired or already used",
                 "layer": "ZKP"
             })
@@ -243,8 +335,24 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
         # Verify challenge matches
         if stored_challenge.hex() != log.zkp_proof.challenge:
             stats["zkp_failures"] += 1
+            stats["blocked_requests"] += 1
+            
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": 1.0,
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": False,
+                "blocked_by": "ZKP"
+            }
+            recent_logs.append(entry)
+            
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
+                "risk_score": 1.0,
                 "reason": "Challenge mismatch",
                 "layer": "ZKP"
             })
@@ -255,15 +363,46 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
             zkp_verified = crypto_utils.verify_signature(public_key, stored_challenge, signature)
         except Exception as e:
             stats["zkp_failures"] += 1
+            stats["blocked_requests"] += 1
+            
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": 1.0,
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": False,
+                "blocked_by": "ZKP"
+            }
+            recent_logs.append(entry)
+            
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
+                "risk_score": 1.0,
                 "reason": f"Invalid signature: {str(e)}",
                 "layer": "ZKP"
             })
         
         if not zkp_verified:
             stats["zkp_failures"] += 1
+            stats["blocked_requests"] += 1
             challenge_store.mark_used(log.zkp_proof.user_id)
+            
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": 1.0,
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": False,
+                "blocked_by": "ZKP"
+            }
+            recent_logs.append(entry)
+            
             raise HTTPException(status_code=403, detail={
                 "status": "BLOCKED",
                 "reason": "ZKP verification failed",
@@ -272,58 +411,75 @@ def verify_request_with_zkp(log: TrafficLogWithZKP):
         
         # Mark challenge as used (prevent replay)
         challenge_store.mark_used(log.zkp_proof.user_id)
+        zkp_verified = True
     
-    # LAYER 2: BEHAVIORAL ANALYSIS (existing ML logic)
-    if model is None:
-        return {"status": "error", "message": "Model not loaded"}
+    # LAYER 2: BEHAVIORAL ANALYSIS (if enabled)
+    risk_score = 0.0
+    
+    if security_config["ml_enabled"]:
+        if model is None:
+            return {"status": "error", "message": "Model not loaded"}
 
-    # Feature Engineering (same as training)
-    is_foreign = 0 if log.geo_location == "India" else 1
-    risky_endpoints = ['/bulk_export', '/admin_login']
-    is_risky = 1 if log.endpoint in risky_endpoints else 0
+        # Feature Engineering
+        is_foreign = 0 if log.geo_location == "India" else 1
+        risky_endpoints = ['/bulk_export', '/admin_login']
+        is_risky = 1 if log.endpoint in risky_endpoints else 0
+        
+        # Prepare DataFrame for prediction
+        features = pd.DataFrame([{
+            'hour': log.hour,
+            'request_rate': log.request_rate,
+            'payload_size_kb': log.payload_size_kb,
+            'is_foreign_ip': is_foreign,
+            'is_risky_endpoint': is_risky
+        }])
+        
+        # Predict
+        prediction = model.predict(features)[0]
+        risk_score = model.decision_function(features)[0]
+        
+        # If ML detects anomaly, BLOCK
+        if prediction == -1:
+            stats["blocked_requests"] += 1
+            
+            entry = {
+                "timestamp": time.time(),
+                "status": "BLOCKED",
+                "risk_score": float(risk_score),
+                "geo": log.geo_location,
+                "endpoint": log.endpoint,
+                "rate": log.request_rate,
+                "payload": log.payload_size_kb,
+                "zkp_verified": zkp_verified,
+                "blocked_by": "ML"
+            }
+            recent_logs.append(entry)
+            
+            raise HTTPException(status_code=403, detail={
+                "status": "BLOCKED",
+                "risk_score": float(risk_score),
+                "reason": "Anomaly detected by ML",
+                "layer": "ML",
+                "zkp_verified": zkp_verified
+            })
     
-    # Prepare DataFrame for prediction
-    features = pd.DataFrame([{
-        'hour': log.hour,
-        'request_rate': log.request_rate,
-        'payload_size_kb': log.payload_size_kb,
-        'is_foreign_ip': is_foreign,
-        'is_risky_endpoint': is_risky
-    }])
-    
-    # Predict
-    prediction = model.predict(features)[0]
-    score = model.decision_function(features)[0]
-    
-    # Log Entry
+    # ALLOWED - Passed all enabled layers
     entry = {
         "timestamp": time.time(),
         "status": "ALLOWED",
-        "risk_score": float(score),
+        "risk_score": float(risk_score),
         "geo": log.geo_location,
         "endpoint": log.endpoint,
         "rate": log.request_rate,
         "payload": log.payload_size_kb,
-        "zkp_verified": zkp_verified
+        "zkp_verified": zkp_verified,
+        "blocked_by": None
     }
-    
-    # Logic: If prediction is -1, BLOCK
-    if prediction == -1:
-        stats["blocked_requests"] += 1
-        entry["status"] = "BLOCKED"
-        recent_logs.append(entry)
-        raise HTTPException(status_code=403, detail={
-            "status": "BLOCKED",
-            "risk_score": float(score),
-            "reason": "Anomaly Detected by Isolation Forest",
-            "layer": "Behavioral ML",
-            "zkp_verified": zkp_verified
-        })
-    
     recent_logs.append(entry)
+    
     return {
         "status": "ALLOWED",
-        "risk_score": float(score),
+        "risk_score": float(risk_score),
         "message": "Request authorized",
         "zkp_verified": zkp_verified
     }

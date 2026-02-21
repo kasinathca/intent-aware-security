@@ -305,6 +305,7 @@ Available Commands:
   <span class="success">help</span>                Show this help menu
   <span class="success">clear</span>               Clear terminal screen
   <span class="success">nmap</span> [target]       Scan target for open ports
+  <span class="success">mimic</span>               Launch sophisticated mimicry attack (DEMO)
   <span class="success">exploit</span> --target    Launch automated attack simulation
   <span class="success">scrape</span> --all         Launch bulk data scraping simulation
   <span class="success">stop</span>                 Stop running attacks
@@ -314,6 +315,8 @@ Available Commands:
                 HISTORY.innerHTML = "";
             } else if (base === 'nmap') {
                 simulateNmap();
+            } else if (base === 'mimic') {
+                launchMimicryAttack();
             } else if (base === 'exploit') {
                 startAttack('brute');
             } else if (base === 'scrape') {
@@ -388,7 +391,7 @@ Available Commands:
                     else HUD_BAR.style.backgroundColor = "#0f0";
 
                     // Network Request
-                    const res = await fetch('/verify', {
+                    const res = await fetch('/verify_zkp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -507,6 +510,144 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
             printOutput("System Ready.", "success");
             setMode('MANUAL');
         }
+
+        // --- SOPHISTICATED MIMICRY ATTACK DEMONSTRATION ---
+        async function launchMimicryAttack() {
+            printOutput(`\n<span class="system-msg">[*] INITIATING SOPHISTICATED MIMICRY ATTACK</span>`, "");
+            printOutput(`<span class="system-msg">[*] Target: Government Portal (localhost:8000)</span>\n`, "");
+
+            await sleep(500);
+
+            // Phase 1: Reconnaissance
+            printOutput(`<span class="success">[PHASE 1] RECONNAISSANCE</span>`, "");
+            await sleep(300);
+            printOutput(`  [+] Intercepted legitimate user traffic`, "output");
+            await sleep(200);
+            printOutput(`  [+] Extracted credentials: DL=KA01 20220001234, DOB=01/01/2000`, "success");
+            await sleep(200);
+            printOutput(`  [+] Analyzed access patterns: Daytime (14:00), Low rate (5 req/min)`, "success");
+            await sleep(200);
+            printOutput(`  [+] Identified source location: India`, "success");
+            await sleep(500);
+
+            // Phase 2: Spoofing
+            printOutput(`\n<span class="success">[PHASE 2] NETWORK SPOOFING</span>`, "");
+            await sleep(300);
+            printOutput(`  [+] Spoofing IP address...`, "output");
+            await sleep(400);
+            printOutput(`      └─ Original IP: 203.192.45.78 (Russia)`, "output");
+            printOutput(`      └─ Spoofed IP:  103.21.58.132 (India) <span class="success">✓</span>`, "success");
+            await sleep(300);
+            printOutput(`  [+] Spoofing MAC address...`, "output");
+            await sleep(400);
+            printOutput(`      └─ Original MAC: 00:1B:44:11:3A:B7`, "output");
+            printOutput(`      └─ Spoofed MAC:  A4:5E:60:E8:9F:2C <span class="success">✓</span>`, "success");
+            await sleep(300);
+            printOutput(`  [+] Mimicking User-Agent...`, "output");
+            await sleep(300);
+            printOutput(`      └─ Mozilla/5.0 (Windows NT 10.0) Chrome/120.0 <span class="success">✓</span>`, "success");
+            await sleep(500);
+
+            // Phase 3: Pattern Mimicry
+            printOutput(`\n<span class="success">[PHASE 3] BEHAVIORAL MIMICRY</span>`, "");
+            await sleep(300);
+            printOutput(`  [+] Matching request timing: 14:00 (Daytime) <span class="success">✓</span>`, "success");
+            await sleep(200);
+            printOutput(`  [+] Matching request rate: 5 req/min (Low) <span class="success">✓</span>`, "success");
+            await sleep(200);
+            printOutput(`  [+] Matching payload size: 2KB (Small) <span class="success">✓</span>`, "success");
+            await sleep(200);
+            printOutput(`  [+] Matching endpoint: /verify_license <span class="success">✓</span>`, "success");
+            await sleep(500);
+
+            // Phase 4: Attack Summary
+            printOutput(`\n<span class="system-msg">[*] ATTACK PROFILE SUMMARY</span>`, "");
+            printOutput(`  ┌─────────────────────────────────────────────┐`, "output");
+            printOutput(`  │ <span class="success">✓</span> Valid Credentials (STOLEN)          │`, "output");
+            printOutput(`  │ <span class="success">✓</span> Trusted IP Location (SPOOFED)       │`, "output");
+            printOutput(`  │ <span class="success">✓</span> Valid MAC Address (SPOOFED)         │`, "output");
+            printOutput(`  │ <span class="success">✓</span> Normal Access Pattern (MIMICKED)    │`, "output");
+            printOutput(`  │ <span class="success">✓</span> Correct Timing (COPIED)             │`, "output");
+            printOutput(`  │ <span class="success">✓</span> Legitimate Payload Size (MATCHED)   │`, "output");
+            printOutput(`  │ <span class="error">✗</span> ZKP Cryptographic Proof (MISSING)   │`, "output");
+            printOutput(`  └─────────────────────────────────────────────┘`, "output");
+            await sleep(800);
+
+            printOutput(`\n<span class="system-msg">[*] Traditional ML-based security would see this as NORMAL traffic</span>`, "");
+            printOutput(`<span class="system-msg">[*] But ZKP requires cryptographic proof...</span>\n`, "");
+            await sleep(1000);
+
+            // Phase 5: Launch Attack
+            printOutput(`<span class="success">[PHASE 4] LAUNCHING ATTACK</span>`, "");
+            await sleep(300);
+            printOutput(`  [*] Crafting request with spoofed parameters...`, "output");
+            await sleep(500);
+            printOutput(`  [*] Sending to /verify_zkp endpoint...`, "output");
+            await sleep(800);
+
+            // Make actual API call
+            try {
+                const response = await fetch('http://localhost:8000/verify_zkp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hour: 14,
+                        request_rate: 5,
+                        payload_size_kb: 2,
+                        geo_location: 'India',
+                        endpoint: '/verify_license'
+                    })
+                });
+
+                const result = await response.json();
+                await sleep(500);
+
+                // Show result
+                if (response.status === 200 && result.status === 'ALLOWED') {
+                    printOutput(`\n  <span class="success">[!] ATTACK SUCCESSFUL - REQUEST ALLOWED</span>`, "");
+                    printOutput(`  <span class="success">[!] Data breach in progress...</span>\n`, "");
+                } else {
+                    printOutput(`\n  <span class="error">[!] ATTACK BLOCKED BY ZKP LAYER</span>`, "");
+                    printOutput(`  <span class="error">[!] Reason: ${result.detail?.reason || 'Cryptographic proof required'}</span>`, "");
+                    printOutput(`  <span class="error">[!] Layer: ${result.detail?.layer || 'ZKP'}</span>\n`, "");
+
+                    await sleep(500);
+                    printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>`, "");
+                    printOutput(`<span class="system-msg">  WHY THE ATTACK FAILED:</span>`, "");
+                    printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>`, "");
+                    printOutput(`  Despite having:`, "output");
+                    printOutput(`    • Stolen credentials`, "output");
+                    printOutput(`    • Spoofed IP and MAC addresses`, "output");
+                    printOutput(`    • Perfect behavioral mimicry`, "output");
+                    printOutput(`    • Correct timing and patterns`, "output");
+                    printOutput(``, "output");
+                    printOutput(`  The attacker CANNOT proceed because:`, "output");
+                    printOutput(`    <span class="error">✗ No private key = No valid signature</span>`, "");
+                    printOutput(`    <span class="error">✗ Cannot forge cryptographic proof</span>`, "");
+                    printOutput(`    <span class="error">✗ ZKP verification mathematically impossible</span>`, "");
+                    printOutput(``, "output");
+                    printOutput(`  <span class="success">The private key never left the user's browser.</span>`, "");
+                    printOutput(`  <span class="success">Without it, the attack is BLOCKED at Layer 1.</span>`, "");
+                    printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>\n`, "");
+                }
+
+                // Show response
+                printOutput(`<span class="output">Server Response:</span>`, "");
+                printOutput(`<span class="output">${JSON.stringify(result, null, 2)}</span>\n`, "");
+
+            } catch (error) {
+                printOutput(`\n  <span class="error">[!] CONNECTION ERROR: ${error.message}</span>`, "");
+                printOutput(`  <span class="error">[!] Ensure backend is running (python app.py)</span>\n`, "");
+            }
+
+            printOutput(`<span class="system-msg">[*] Attack demonstration complete.</span>`, "");
+            printOutput(`<span class="system-msg">[*] Check dashboard at http://localhost:8000/dashboard/</span>\n`, "");
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
     </script>
 </body>
 

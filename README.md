@@ -68,10 +68,13 @@ python attacker.py
 - `train_model.py`: Trains the Isolation Forest model
 - `app.py`: The security middleware (FastAPI backend)
 - `attacker.py`: The attack simulation tool
-- `zkp_simulation.py`: A simple demo of Zero Knowledge Proofs
+- `crypto_utils.py`: Cryptographic utilities for full Zero-Knowledge Proof (ZKP) authentication
+- `test_zkp_integration.py`: Integration tests for the complete ZKP flow
+- `zkp_simulation.py`: A simple demo of Zero Knowledge Proof concepts
 - `start_system.bat`: Automated system launcher
 
 ### Frontend (static/)
 - `portal/`: Government portal simulation
+  - `zkp-client.js`: Client-side ZKP library for key generation and cryptographic signing
 - `hacker/`: Hacker console interface
 - `dashboard/`: Real-time security monitoring dashboard (HTML/JS/Chart.js)

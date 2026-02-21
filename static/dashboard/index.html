@@ -73,6 +73,28 @@
             </div>
 
             <div class="panel-section">
+                <div class="panel-title">🛡️ Security Controls</div>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="zkp-toggle" checked>
+                            <span>ZKP Layer</span>
+                        </label>
+                        <span id="zkp-status" class="status-badge enabled">ON</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="ml-toggle" checked>
+                            <span>ML Layer</span>
+                        </label>
+                        <span id="ml-status" class="status-badge enabled">ON</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
                 <div class="panel-title">Legend</div>
                 <div class="legend-item">
                     <div class="dot safe"></div> Safe Request
@@ -102,12 +124,8 @@
                     <div class="metric-value" id="m-blocked">0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Uptime Guarantee</div>
-                    <div class="metric-value" id="m-uptime">100%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Threat Level</div>
-                    <div class="metric-value" id="m-threat">Low</div>
+                    <div class="metric-label">Pass Rate</div>
+                    <div class="metric-value" id="m-pass-rate">100%</div>
                 </div>
             </div>
 
@@ -126,6 +144,12 @@
                 </div>
             </div>
 
+            <!-- ZKP Authentication Chart -->
+            <div class="chart-box" style="max-width: 500px; margin: 20px auto;">
+                <div class="chart-title">Authentication Methods</div>
+                <canvas id="zkpChart"></canvas>
+            </div>
+
             <!-- Table -->
             <div class="chart-box">
                 <div class="chart-title">Audit Log (Recent Activity)</div>
@@ -137,6 +161,8 @@
                             <th>Endpoint</th>
                             <th>Source</th>
                             <th>Risk Score</th>
+                            <th>ZKP Status</th>
+                            <th>Blocked By</th>
                         </tr>
                     </thead>
                     <tbody id="log-table-body">
