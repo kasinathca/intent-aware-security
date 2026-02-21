@@ -94,6 +94,7 @@ app.mount("/portal", StaticFiles(directory="static/portal"), name="portal")
 app.mount("/hacker", StaticFiles(directory="static/hacker"), name="hacker")
 app.mount("/dashboard", StaticFiles(directory="static/dashboard", html=True), name="dashboard")
 app.mount("/demo", StaticFiles(directory="static/demo", html=True), name="demo")
+app.mount("/compare", StaticFiles(directory="static/compare", html=True), name="compare")
 
 # ============ REQUEST MODELS ============
 

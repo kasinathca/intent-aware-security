@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Architecture Comparison — NIC</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=Source+Code+Pro:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,1,0"
+        rel="stylesheet">
+    <style>
+        :root {
+            --nic-blue: #1b4e9b;
+            --nic-orange: #ff9933;
+            --nic-green: #138808;
+            --red: #c0392b;
+            --green: #1a7a3a;
+            --red-bg: #fff5f5;
+            --green-bg: #f0fff4;
+            --red-border: #e74c3c;
+            --green-border: #27ae60;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Open Sans', 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .govt-strip {
+            background: #2d2d2d;
+            color: #ccc;
+            font-size: .78rem;
+            padding: 5px 24px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .nic-header {
+            background: white;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border-bottom: 3px solid var(--nic-orange);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+        }
+
+        .nic-header img {
+            width: 54px;
+        }
+
+        .nic-header .htxt {
+            border-left: 2px solid #ddd;
+            padding-left: 18px;
+        }
+
+        .nic-header .htxt p {
+            font-size: .8rem;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .nic-header .htxt h1 {
+            font-size: 1.5rem;
+            color: var(--nic-blue);
+            font-weight: 800;
+        }
+
+        .nav-bar {
+            background: var(--nic-blue);
+            color: white;
+            padding: 10px 24px;
+            font-size: .9rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-bar a {
+            color: var(--nic-orange);
+            text-decoration: none;
+            font-size: .85rem;
+        }
+
+        .page-title {
+            text-align: center;
+            padding: 32px 24px 20px;
+        }
+
+        .page-title h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--nic-blue);
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            font-size: 1rem;
+            color: #555;
+            max-width: 680px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+
+        .scenario-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 10px;
+        }
+
+        .scen-btn {
+            padding: 12px 32px;
+            font-size: .95rem;
+            font-weight: 700;
+            border: 2px solid var(--nic-blue);
+            cursor: pointer;
+            transition: all .2s;
+            background: white;
+            color: var(--nic-blue);
+        }
+
+        .scen-btn:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .scen-btn:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .scen-btn.active {
+            background: var(--nic-blue);
+            color: white;
+        }
+
+        .scen-label {
+            text-align: center;
+            font-size: .85rem;
+            color: #666;
+            margin-bottom: 28px;
+        }
+
+        /* TEXT COMPARISON */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            max-width: 1400px;
+            margin: 0 auto 50px;
+            padding: 0 20px;
+        }
+
+        .col {
+            padding: 28px;
+        }
+
+        .col-bad {
+            background: var(--red-bg);
+            border: 2px solid var(--red-border);
+            border-right: 1px solid #ddd;
+            border-radius: 12px 0 0 12px;
+        }
+
+        .col-good {
+            background: var(--green-bg);
+            border: 2px solid var(--green-border);
+            border-left: 1px solid #ddd;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .col-header {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 26px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+        }
+
+        .col-bad .col-header {
+            background: var(--red);
+            color: white;
+        }
+
+        .col-good .col-header {
+            background: var(--green);
+            color: white;
+        }
+
+        .col-header .verdict {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+
+        .col-header h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+            letter-spacing: .3px;
+        }
+
+        .col-header p {
+            font-size: .85rem;
+            opacity: .95;
+            font-weight: 500;
+        }
+
+        .flow-title {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 14px;
+            opacity: .3;
+            transition: opacity .4s, transform .3s;
+            padding: 4px 0;
+        }
+
+        .step.active {
+            opacity: 1;
+            transform: translateX(6px);
+        }
+
+        .step.done {
+            opacity: .7;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            margin-top: 2px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+        }
+
+        .col-bad .step-num {
+            background: #fde8e8;
+            color: var(--red);
+            border: 2px solid var(--red);
+        }
+
+        .col-good .step-num {
+            background: #d4edda;
+            color: var(--green);
+            border: 2px solid var(--green);
+        }
+
+        .step-text {
+            font-size: .92rem;
+            line-height: 1.6;
+        }
+
+        .step-text strong {
+            display: block;
+            font-weight: 800;
+            color: #222;
+            margin-bottom: 2px;
+        }
+
+        .step-text span {
+            color: #666;
+            font-size: .84rem;
+            font-weight: 500;
+        }
+
+        .result-banner {
+            border-radius: 8px;
+            padding: 18px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: .5px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity .5s, transform .5s;
+            margin-bottom: 20px;
+        }
+
+        .result-banner.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-bad {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .result-good {
+            background: #27ae60;
+            color: white;
+        }
+
+        .cards-title {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .card {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: .82rem;
+            line-height: 1.4;
+        }
+
+        .card-vuln {
+            background: #fde8e8;
+            border-left: 3px solid var(--red);
+            color: #7b1a1a;
+        }
+
+        .card-prot {
+            background: #d4edda;
+            border-left: 3px solid var(--green);
+            color: #155724;
+        }
+
+        .card strong {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        /* ══ SIMULATION SECTION ══ */
+        .sim-section {
+            max-width: 100%;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+            overflow-x: hidden;
+        }
+
+        .sim-section h3 {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--nic-blue);
+            margin-bottom: 8px;
+        }
+
+        .sim-sub {
+            text-align: center;
+            color: #666;
+            font-size: .95rem;
+            margin-bottom: 36px;
+            line-height: 1.5;
+        }
+
+        .scenario-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: .8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .badge-a {
+            background: #fde8e8;
+            color: var(--red);
+        }
+
+        .badge-b {
+            background: #d4edda;
+            color: var(--green);
+        }
+
+        .sim-stage {
+            display: grid;
+            grid-template-columns: minmax(300px, 350px) minmax(260px, 300px) minmax(420px, 520px);
+            gap: 24px;
+            align-items: start;
+            justify-content: center;
+            justify-items: center;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        /* ── PHONE ── */
+        .phone-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .device-label {
+            font-size: .82rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #444;
+            text-align: center;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, .9);
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .phone {
+            width: 300px;
+            height: 600px;
+            background: linear-gradient(145deg, #2a2a2a, #111);
+            border-radius: 46px;
+            padding: 14px;
+            box-shadow:
+                0 0 0 1px #444,
+                0 0 0 3px #222,
+                inset 0 1px 0 rgba(255, 255, 255, .08),
+                0 30px 80px rgba(0, 0, 0, .6),
+                0 0 40px rgba(0, 0, 0, .3);
+            position: relative;
+            flex-shrink: 0;
+            margin: 0 auto;
+        }
+
+        /* Volume buttons */
+        .phone::before {
+            content: '';
+            position: absolute;
+            left: -4px;
+            top: 100px;
+            width: 5px;
+            height: 32px;
+            background: linear-gradient(to right, #1a1a1a, #2a2a2a);
+            border-radius: 3px 0 0 3px;
+            box-shadow: -1px 0 2px rgba(0, 0, 0, .5);
+            z-index: 1;
+        }
+
+        /* Power button */
+        .phone::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 115px;
+            width: 5px;
+            height: 60px;
+            background: linear-gradient(to left, #1a1a1a, #2a2a2a);
+            border-radius: 0 3px 3px 0;
+            box-shadow: 1px 0 2px rgba(0, 0, 0, .5);
+            z-index: 1;
+        }
+
+        /* Second volume button via wrapper */
+        .phone .vol2 {
+            position: absolute;
+            left: -4px;
+            top: 145px;
+            width: 5px;
+            height: 32px;
+            background: linear-gradient(to right, #1a1a1a, #2a2a2a);
+            border-radius: 3px 0 0 3px;
+            box-shadow: -1px 0 2px rgba(0, 0, 0, .5);
+            z-index: 1;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 34px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 1px rgba(255, 255, 255, .1);
+        }
+
+        /* Dynamic island style notch */
+        .notch {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 26px;
+            background: #111;
+            border-radius: 20px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 0 0 1px #222;
+        }
+
+        .notch-cam {
+            width: 10px;
+            height: 10px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            border: 1.5px solid #333;
+            position: relative;
+        }
+
+        .notch-cam::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: #0a0a0a;
+            border-radius: 50%;
+            box-shadow: 0 0 3px rgba(100, 180, 255, .4);
+        }
+
+        .notch-speaker {
+            width: 36px;
+            height: 5px;
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .status-bar {
+            background: rgba(0, 0, 0, .2);
+            /* Transparent on top of wallpaper/app */
+            color: white;
+            font-size: .68rem;
+            font-weight: 700;
+            padding: 44px 18px 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            font-family: 'Source Code Pro', monospace;
+            letter-spacing: .3px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .signal-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .bar {
+            width: 3px;
+            background: white;
+            border-radius: 1px;
+            transition: opacity .5s;
+        }
+
+        .bar:nth-child(1) {
+            height: 4px;
+        }
+
+        .bar:nth-child(2) {
+            height: 6px;
+        }
+
+        .bar:nth-child(3) {
+            height: 9px;
+        }
+
+        .bar:nth-child(4) {
+            height: 12px;
+        }
+
+        .bar.dim {
+            opacity: .2;
+        }
+
+        .wifi-icon {
+            font-size: .65rem;
+        }
+
+        .battery-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1px;
+        }
+
+        .batt-icon {
+            font-size: 15px !important;
+            line-height: 1;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .batt-pct {
+            font-size: .5rem;
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .screen-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .home-bar {
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 8px;
+            z-index: 10;
+        }
+
+        .home-pill {
+            width: 110px;
+            height: 4px;
+            background: #fff;
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+
+        .home-bar {
+            height: 20px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .home-pill {
+            width: 80px;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+        }
+
+        .screen-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity .6s;
+            pointer-events: none;
+        }
+
+        .screen-state.visible {
+            opacity: 1;
+        }
+
+        /* Lock screen */
+        .lock-screen {
+            background: linear-gradient(160deg, #0a0a1a 0%, #0d1b3e 50%, #1a0a2e 100%);
+            color: white;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lock-wallpaper {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 40%, rgba(100, 60, 200, .3), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(30, 100, 200, .2), transparent 50%);
+        }
+
+        .lock-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lock-time {
+            font-size: 4rem;
+            font-weight: 200;
+            letter-spacing: 4px;
+            text-shadow: 0 2px 20px rgba(255, 255, 255, .3);
+        }
+
+        .lock-date {
+            font-size: .82rem;
+            opacity: .6;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .lock-unlock {
+            margin-top: 20px;
+            font-size: .6rem;
+            opacity: .4;
+            letter-spacing: 1px;
+        }
+
+        /* App screen */
+        .aadhaar-app {
+            background: #f0f4fa;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-topbar {
+            background: linear-gradient(135deg, #1b4e9b, #0d3a7a);
+            color: white;
+            padding: 14px 16px;
+            font-size: .8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+            flex-shrink: 0;
+        }
+
+        .app-topbar .back {
+            opacity: .7;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .app-topbar .title-wrap {
+            flex: 1;
+        }
+
+        .app-topbar .app-name {
+            font-size: .85rem;
+            font-weight: 800;
+        }
+
+        .app-topbar .app-sub {
+            font-size: .65rem;
+            opacity: .7;
+            font-weight: 400;
+        }
+
+        .app-topbar .uidai-badge {
+            background: rgba(255, 255, 255, .15);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: .62rem;
+            font-weight: 700;
+        }
+
+        .app-body {
+            flex: 1;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+            border: 1px solid rgba(0, 0, 0, .04);
+        }
+
+        .app-card-title {
+            font-size: .75rem;
+            font-weight: 800;
+            color: var(--nic-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .app-field label {
+            font-size: .68rem;
+            color: #999;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: .5px;
+        }
+
+        .app-field .val {
+            font-size: .88rem;
+            font-weight: 600;
+            color: #111;
+            font-family: 'Source Code Pro', monospace;
+            letter-spacing: 1.5px;
+            min-height: 18px;
+        }
+
+        .app-field .val.typing::after {
+            content: '|';
+            animation: blink 1s step-start infinite;
+            color: var(--nic-blue);
+        }
+
+        .app-field .val.redacted {
+            color: #bbb;
+            letter-spacing: 2px;
+        }
+
+        .otp-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .otp-d {
+            width: 32px;
+            height: 40px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: 'Source Code Pro', monospace;
+            background: #fafafa;
+            transition: border-color .2s, background .2s;
+        }
+
+        .otp-d.filled {
+            border-color: var(--nic-blue);
+            background: #eef3ff;
+            color: var(--nic-blue);
+        }
+
+        .otp-d.active-cursor {
+            border-color: var(--nic-blue);
+            animation: pulse-border .8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                border-color: var(--nic-blue);
+            }
+
+            50% {
+                border-color: #7aabff;
+            }
+        }
+
+        .zkp-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 0;
+        }
+
+        .zkp-ring-wrap {
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+
+        .zkp-ring {
+            width: 64px;
+            height: 64px;
+            border: 4px solid #e8e8e8;
+            border-top-color: var(--nic-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+        }
+
+        .zkp-ring.done {
+            animation: none;
+            border-color: #27ae60;
+        }
+
+        .zkp-check {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            opacity: 0;
+            transition: opacity .4s;
+        }
+
+        .zkp-check.show {
+            opacity: 1;
+        }
+
+        .zkp-label {
+            font-size: .72rem;
+            color: #666;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .status-pill {
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: .62rem;
+            font-weight: 700;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .pill-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .pill-err {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .pill-wait {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .app-action-btn {
+            border-radius: 8px;
+            padding: 11px;
+            font-size: .82rem;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #1b4e9b, #0d3a7a);
+            color: white;
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #27ae60, #1a7a3a);
+            color: white;
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        /* SMS notification — inside screen-content so it clips within the phone screen */
+        .sms-notif {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(28, 28, 30, .95);
+            -webkit-backdrop-filter: blur(30px);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transform: translateY(-150%);
+            transition: transform .6s cubic-bezier(.34, 1.4, .64, 1);
+            z-index: 30;
+            border: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .4);
+        }
+
+        .sms-notif.slide-in {
+            transform: translateY(0);
+        }
+
+        .sms-icon-wrap {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #30d158, #25a244);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(48, 209, 88, .4);
+        }
+
+        .sms-meta {
+            flex: 1;
+        }
+
+        .sms-app-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .sms-app-name {
+            font-size: .67rem;
+            color: rgba(255, 255, 255, .6);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+
+        .sms-time {
+            font-size: .62rem;
+            color: rgba(255, 255, 255, .4);
+            font-weight: 600;
+        }
+
+        .sms-sender {
+            font-size: .8rem;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 3px;
+            letter-spacing: .2px;
+        }
+
+        .sms-body-text {
+            font-size: .74rem;
+            color: rgba(255, 255, 255, .8);
+            line-height: 1.5;
+        }
+
+        .sms-body-text strong {
+            color: white;
+        }
+
+        /* ── LAPTOP ── */
+        .laptop-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .laptop {
+            width: 460px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .5));
+            margin: 0 auto;
+        }
+
+        .laptop-lid {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(145deg, #1c1c1e, #2c2c2e);
+            border-radius: 14px 14px 0 0;
+            border: 2px solid #3a3a3c;
+            border-bottom: none;
+            padding: 12px;
+            position: relative;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+        }
+
+        .laptop-lid::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #1c1c1e;
+            border-radius: 50%;
+            border: 1px solid #3a3a3c;
+        }
+
+        .laptop-screen-inner {
+            width: 100%;
+            height: 100%;
+            background: #0d1117;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, .6);
+        }
+
+        .laptop-titlebar {
+            background: #161b22;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .ltb-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, .3);
+        }
+
+        .ltb-dot.r {
+            background: #ff5f57;
+        }
+
+        .ltb-dot.y {
+            background: #febc2e;
+        }
+
+        .ltb-dot.g {
+            background: #28c840;
+        }
+
+        .ltb-title {
+            font-size: .76rem;
+            color: #8b949e;
+            margin-left: 10px;
+            font-family: 'Source Code Pro', monospace;
+            letter-spacing: .4px;
+        }
+
+        .laptop-terminal {
+            flex: 1;
+            padding: 12px 16px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: .86rem;
+            line-height: 1.8;
+            color: #c9d1d9;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .lt-line {
+            display: block;
+        }
+
+        .lt-ok {
+            color: #3fb950;
+        }
+
+        .lt-err {
+            color: #f85149;
+        }
+
+        .lt-warn {
+            color: #d29922;
+        }
+
+        .lt-info {
+            color: #58a6ff;
+        }
+
+        .lt-dim {
+            color: #484f58;
+        }
+
+        .lt-prompt {
+            color: #8b949e;
+        }
+
+        .laptop-hinge {
+            width: 103%;
+            height: 10px;
+            background: linear-gradient(to bottom, #3a3a3c, #2c2c2e);
+            margin-left: -1.5%;
+            border-radius: 0 0 3px 3px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .4);
+        }
+
+        .laptop-base {
+            width: 112%;
+            height: 16px;
+            background: linear-gradient(to bottom, #2c2c2e, #1c1c1e);
+            border-radius: 0 0 8px 8px;
+            border: 2px solid #3a3a3c;
+            border-top: none;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .4);
+        }
+
+        .laptop-base::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 5px;
+            background: #0a0a0a;
+            border-radius: 0 0 5px 5px;
+            box-shadow: inset 0 -1px 2px rgba(0, 0, 0, .5);
+        }
+
+        .laptop-foot {
+            width: 92%;
+            height: 6px;
+            background: #0a0a0a;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .6);
+            margin-top: -2px;
+        }
+
+        /* Rogue SIM phone — proper phone shape */
+        .rogue-phone {
+            width: 270px;
+            height: 520px;
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            border-radius: 36px;
+            padding: 12px;
+            box-shadow:
+                0 0 0 1px #444,
+                0 0 0 3px #222,
+                inset 0 1px 0 rgba(255, 255, 255, .05),
+                0 20px 60px rgba(0, 0, 0, .5);
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .rogue-phone::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 95px;
+            width: 4px;
+            height: 55px;
+            background: linear-gradient(to left, #1a1a1a, #2a2a2a);
+            border-radius: 0 3px 3px 0;
+            box-shadow: 1px 0 2px rgba(0, 0, 0, .5);
+            z-index: 1;
+        }
+
+        .rogue-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 1px rgba(255, 255, 255, .1);
+        }
+
+        .rogue-notch {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 20px;
+            background: #111;
+            border-radius: 14px;
+            z-index: 10;
+            box-shadow: 0 0 0 1px #222;
+        }
+
+        .rogue-statusbar {
+            background: #000;
+            color: white;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: 35px 14px 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Source Code Pro', monospace;
+            flex-shrink: 0;
+        }
+
+        .rogue-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .rogue-home {
+            height: 18px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            padding-bottom: 6px;
+        }
+
+        .rogue-home-pill {
+            width: 60px;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+        }
+
+        .rogue-state {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity .5s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rogue-state.visible {
+            opacity: 1;
+        }
+
+        .rogue-sms-notif {
+            position: absolute;
+            top: 48px;
+            left: 8px;
+            right: 8px;
+            background: rgba(28, 28, 30, .96);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            transform: translateY(-160px);
+            transition: transform .6s cubic-bezier(.34, 1.4, .64, 1);
+            z-index: 30;
+            border: 1px solid rgba(255, 255, 255, .1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .4);
+        }
+
+        .rogue-sms-notif.slide-in {
+            transform: translateY(0);
+        }
+
+        /* ── GATEWAY ── */
+        .gateway-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .gw-box {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 16px;
+            padding: 20px 16px;
+            width: 100%;
+            max-width: 260px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin: 0 auto;
+        }
+
+        .gw-title {
+            font-size: .75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .gw-icon {
+            font-size: 2.2rem;
+            transition: all .3s;
+            line-height: 1;
+        }
+
+        .gw-status {
+            font-size: .74rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            width: 100%;
+            transition: all .3s;
+            letter-spacing: .3px;
+        }
+
+        .gw-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .gw-err {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .gw-wait {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .gw-neutral {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .gw-log {
+            width: 100%;
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: .64rem;
+            line-height: 1.8;
+            color: #8b949e;
+            min-height: 100px;
+            max-height: 140px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .gl {
+            display: block;
+        }
+
+        .gl-ok {
+            color: #3fb950;
+        }
+
+        .gl-err {
+            color: #f85149;
+        }
+
+        .gl-info {
+            color: #58a6ff;
+        }
+
+        .gl-warn {
+            color: #d29922;
+        }
+
+        /* Data pulse arrows */
+        .pulse-arrow {
+            font-size: 1.4rem;
+            color: #aaa;
+            text-align: center;
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            opacity: 0;
+        }
+
+        .pulse-dot.active {
+            animation: pulse-travel 1s ease-in-out forwards;
+        }
+
+        @keyframes pulse-travel {
+            0% {
+                opacity: 0;
+                transform: translateX(0);
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateX(var(--travel));
+            }
+        }
+
+        .pulse-dot.blue {
+            background: #58a6ff;
+            box-shadow: 0 0 6px #58a6ff;
+        }
+
+        .pulse-dot.green {
+            background: #3fb950;
+            box-shadow: 0 0 6px #3fb950;
+        }
+
+        .pulse-dot.red {
+            background: #f85149;
+            box-shadow: 0 0 6px #f85149;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Custom scrollbar styling */
+        .laptop-terminal::-webkit-scrollbar,
+        .gw-log::-webkit-scrollbar,
+        .app-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .laptop-terminal::-webkit-scrollbar-track,
+        .gw-log::-webkit-scrollbar-track,
+        .app-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, .1);
+            border-radius: 3px;
+        }
+
+        .laptop-terminal::-webkit-scrollbar-thumb,
+        .gw-log::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+
+        .app-body::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .laptop-terminal::-webkit-scrollbar-thumb:hover,
+        .gw-log::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        .app-body::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        footer {
+            background: #2d2d2d;
+            color: #aaa;
+            text-align: center;
+            padding: 18px;
+            font-size: .8rem;
+            border-top: 3px solid var(--nic-orange);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .sim-stage {
+                grid-template-columns: minmax(280px, 320px) minmax(240px, 280px) minmax(400px, 480px);
+                gap: 16px;
+                padding: 15px;
+            }
+
+            .phone {
+                width: 280px;
+                height: 560px;
+            }
+
+            .laptop {
+                width: 420px;
+            }
+
+            .laptop-lid {
+                height: 275px;
+            }
+
+            .rogue-phone {
+                width: 250px;
+                height: 490px;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .sim-stage {
+                grid-template-columns: minmax(240px, 280px) minmax(220px, 260px) minmax(340px, 420px);
+                gap: 12px;
+                padding: 10px;
+            }
+
+            .phone {
+                width: 250px;
+                height: 500px;
+            }
+
+            .laptop {
+                width: 360px;
+            }
+
+            .laptop-lid {
+                height: 250px;
+            }
+
+            .rogue-phone {
+                width: 230px;
+                height: 440px;
+            }
+
+            .gw-box {
+                max-width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .compare-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 10px;
+            }
+
+            .col-bad {
+                border-radius: 12px;
+                border-right: 2px solid var(--red-border);
+            }
+
+            .col-good {
+                border-radius: 12px;
+                border-left: 2px solid var(--green-border);
+            }
+
+            .step-info-wrap {
+                min-width: 280px;
+                padding: 12px 16px;
+            }
+
+            .nav-btn {
+                min-width: 100px;
+                padding: 10px 20px;
+                font-size: .8rem;
+            }
+
+            .sim-stage {
+                grid-template-columns: minmax(220px, 260px) minmax(200px, 240px) minmax(300px, 360px);
+                gap: 10px;
+                padding: 8px;
+            }
+
+            .phone {
+                width: 220px;
+                height: 440px;
+                padding: 10px;
+                border-radius: 38px;
+            }
+
+            .phone-screen {
+                border-radius: 30px;
+            }
+
+            .laptop {
+                width: 310px;
+            }
+
+            .laptop-lid {
+                height: 215px;
+            }
+
+            .rogue-phone {
+                width: 200px;
+                height: 390px;
+            }
+
+            .gw-box {
+                max-width: 220px;
+                padding: 16px 12px;
+            }
+
+            .device-label {
+                font-size: .72rem;
+                padding: 6px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .scenario-toggle {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .scen-btn:first-child,
+            .scen-btn:last-child {
+                border-radius: 8px;
+            }
+
+            .sim-section {
+                padding: 0 10px;
+            }
+        }
+
+        /* ── STATUS BAR HELPERS ── */
+        .carrier-label {
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: .3px;
+            color: rgba(255, 255, 255, .85);
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .batt-72 { width: 72%; }
+
+        /* ── ZKP CARD HELPERS ── */
+        .zkp-nonce {
+            font-size: .58rem !important;
+            color: #888;
+            letter-spacing: .5px !important;
+        }
+
+        .zkp-algo {
+            font-size: .55rem;
+            color: #aaa;
+        }
+
+        /* ── INITIALLY HIDDEN APP ELEMENTS ── */
+        /* JS overrides these with style.display at runtime */
+        .v-status-wrap-hidden {
+            display: none;
+            text-align: center;
+        }
+
+        .v-action-hidden {
+            display: none;
+        }
+
+        /* ── MISC ── */
+        .arrow-icon { color: #ccc; font-size: 1rem; }
+        .lt-cursor  { color: #c9d1d9; }
+
+        /* ── ROGUE PHONE LABEL ── */
+        .rogue-label { margin-top: 16px; }
+
+        /* ── ROGUE SMS NOTIFICATION INTERNALS ── */
+        .rogue-sms-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #30d158, #25a244);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            flex-shrink: 0;
+        }
+
+        .rogue-app-name {
+            font-size: .62rem;
+            color: rgba(255,255,255,.5);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .rogue-sender {
+            font-size: .76rem;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .rogue-body {
+            font-size: .72rem;
+            color: rgba(255,255,255,.8);
+            line-height: 1.4;
+        }
+
+        .rogue-body strong { color: white; }
+
+        /* ── ROGUE SIGNAL BARS ── */
+        .rogue-signal {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .rbar {
+            width: 2px;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .rb1 { height: 3px; }
+        .rb2 { height: 5px; }
+        .rb3 { height: 7px; }
+        .rb4 { height: 9px; }
+
+        /* ── ROGUE IDLE SCREEN ── */
+        .rogue-idle-screen {
+            flex: 1;
+            background: #0d1117;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        .rogue-idle-icon { font-size: 2rem; }
+
+        .rogue-idle-text {
+            color: #484f58;
+            font-size: .76rem;
+            text-align: center;
+            font-family: 'Source Code Pro', monospace;
+            line-height: 1.6;
+        }
+
+        .rogue-swap-label { color: #d29922; }
+
+        /* ── ROGUE ACTIVE SCREEN ── */
+        .rogue-active-screen {
+            flex: 1;
+            background: #0d1117;
+            padding: 12px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: .78rem;
+            line-height: 1.8;
+            overflow: hidden;
+        }
+
+        .rogue-green-text { color: #3fb950; }
+    </style>
+</head>
+
+<body>
+
+    <div class="govt-strip">
+        <span>GOVERNMENT OF INDIA &nbsp;|&nbsp; Ministry of Electronics &amp; Information Technology</span>
+        <span>NIC — Security Architecture Review</span>
+    </div>
+    <header class="nic-header">
+        <img src="/portal/ashoka_emblem.svg" alt="Ashoka Emblem">
+        <div class="htxt">
+            <p>National Informatics Centre</p>
+            <h1>Security Architecture Comparison</h1>
+        </div>
+    </header>
+    <nav class="nav-bar">
+        <span>⚖️ BEFORE vs AFTER — AADHAAR VERIFICATION SECURITY</span>
+        <a href="/dashboard/" target="_blank">← Back to Dashboard</a>
+    </nav>
+
+    <div class="page-title">
+        <h2>How the Same Attack Plays Out Differently</h2>
+        <p>An attacker has stolen an Aadhaar number and performed a SIM swap. Watch what happens under each system.</p>
+        <div class="scenario-toggle">
+            <button class="scen-btn active" id="btn-a" onclick="selectScenario('a')">❌ Scenario A — Current OTP
+                System</button>
+            <button class="scen-btn" id="btn-b" onclick="selectScenario('b')">✅ Scenario B — ZKP System</button>
+        </div>
+        <div class="scen-label" id="scen-label">Current Aadhaar OTP authentication — attacker wins</div>
+    </div>
+
+    <!-- TEXT COMPARISON -->
+    <div class="compare-grid">
+        <div class="col col-bad">
+            <div class="col-header">
+                <div class="verdict">❌</div>
+                <h3>Current Aadhaar System</h3>
+                <p>OTP-based authentication via SMS</p>
+            </div>
+            <div class="flow-title">Authentication Flow</div>
+            <div id="steps-bad">
+                <div class="step" id="bad-s1">
+                    <div class="step-num">1</div>
+                    <div class="step-text"><strong>User enters Aadhaar number</strong><span>12-digit UID submitted to
+                            server</span></div>
+                </div>
+                <div class="step" id="bad-s2">
+                    <div class="step-num">2</div>
+                    <div class="step-text"><strong>OTP sent via SMS</strong><span>6-digit code to registered
+                            mobile</span></div>
+                </div>
+                <div class="step" id="bad-s3">
+                    <div class="step-num">3</div>
+                    <div class="step-text"><strong>Attacker intercepts OTP</strong><span>SIM swap routes SMS to
+                            attacker</span></div>
+                </div>
+                <div class="step" id="bad-s4">
+                    <div class="step-num">4</div>
+                    <div class="step-text"><strong>OTP submitted &amp; accepted</strong><span>Server has no way to
+                            distinguish</span></div>
+                </div>
+            </div>
+            <div class="result-banner result-bad" id="result-bad">🔓 &nbsp;ATTACKER AUTHENTICATED — ACCESS GRANTED</div>
+            <div class="cards-title">Known Vulnerabilities</div>
+            <div class="cards-grid">
+                <div class="card card-vuln"><strong>SIM Swap</strong>Attacker ports victim's number, receives all OTPs
+                </div>
+                <div class="card card-vuln"><strong>SS7 Attack</strong>Telecom protocol flaw allows OTP interception
+                </div>
+                <div class="card card-vuln"><strong>Credential Stuffing</strong>Leaked Aadhaar + DOB used directly</div>
+                <div class="card card-vuln"><strong>Phishing</strong>Fake UIDAI portals trick users into entering OTPs
+                </div>
+            </div>
+        </div>
+        <div class="col col-good">
+            <div class="col-header">
+                <div class="verdict">✅</div>
+                <h3>Proposed ZKP + ML System</h3>
+                <p>Cryptographic proof — no OTP channel</p>
+            </div>
+            <div class="flow-title">Authentication Flow</div>
+            <div id="steps-good">
+                <div class="step" id="good-s1">
+                    <div class="step-num">1</div>
+                    <div class="step-text"><strong>User enters Aadhaar number</strong><span>12-digit UID submitted to
+                            server</span></div>
+                </div>
+                <div class="step" id="good-s2">
+                    <div class="step-num">2</div>
+                    <div class="step-text"><strong>Server issues ZKP challenge</strong><span>Random 32-byte
+                            cryptographic nonce</span></div>
+                </div>
+                <div class="step" id="good-s3">
+                    <div class="step-num">3</div>
+                    <div class="step-text"><strong>Browser signs with private key</strong><span>ECDSA P-256 — key never
+                            leaves device</span></div>
+                </div>
+                <div class="step" id="good-s4">
+                    <div class="step-num">4</div>
+                    <div class="step-text"><strong>Signature verified + ML check</strong><span>Cryptographically
+                            unforgeable proof</span></div>
+                </div>
+            </div>
+            <div class="result-banner result-good" id="result-good">🔒 &nbsp;ATTACKER BLOCKED — CRYPTOGRAPHIC PROOF
+                FAILED</div>
+            <div class="cards-title">Why Each Attack Fails</div>
+            <div class="cards-grid">
+                <div class="card card-prot"><strong>SIM Swap: Useless</strong>No OTP channel — SIM control gives nothing
+                </div>
+                <div class="card card-prot"><strong>SS7 Attack: Useless</strong>No SMS in the auth flow to intercept
+                </div>
+                <div class="card card-prot"><strong>Credential Stuffing: Blocked</strong>Private key was never in the
+                    breach</div>
+                <div class="card card-prot"><strong>Phishing: Blocked</strong>Attacker has no private key to sign with
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHONE SIMULATION -->
+    <div class="sim-section">
+        <h3>📱 Live Device Simulation</h3>
+        <p class="sim-sub">Watch the attack unfold across the victim's phone, the security gateway, and the attacker's
+            machine.</p>
+        <div style="text-align:center;margin-bottom:24px;">
+            <span class="scenario-badge badge-a" id="sim-badge">Scenario A — OTP System: Attacker Wins</span>
+        </div>
+
+        <div class="sim-stage">
+
+            <!-- COL 1: VICTIM PHONE -->
+            <div class="phone-wrap">
+                <div class="device-label">👤 Victim's Phone</div>
+                <div class="phone">
+                    <div class="vol2"></div>
+                    <div class="phone-screen">
+                        <div class="notch">
+                            <div class="notch-speaker"></div>
+                            <div class="notch-cam"></div>
+                        </div>
+                        <div class="status-bar">
+                            <span id="victim-time">22:07</span>
+                            <div class="status-right">
+                                <span class="carrier-label" id="victim-carrier">Jio 4G</span>
+                                <div class="signal-bars" id="victim-signal">
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                </div>
+                                <div class="battery-wrap">
+                                    <span class="material-symbols-outlined batt-icon">battery_5_bar</span>
+                                    <span class="batt-pct">72%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="screen-content">
+                            <div class="sms-notif" id="sms-notif">
+                                <div class="sms-icon-wrap">💬</div>
+                                <div class="sms-meta">
+                                    <div class="sms-app-row">
+                                        <span class="sms-app-name">Messages · UIDAI</span>
+                                        <span class="sms-time">now</span>
+                                    </div>
+                                    <div class="sms-sender">UIDAI-OTP</div>
+                                    <div class="sms-body-text" id="sms-text">Your Aadhaar OTP is <strong>847291</strong>. Valid for 10 min. Do not share.</div>
+                                </div>
+                            </div>
+                            <!-- Lock screen -->
+                            <div class="screen-state visible" id="v-lock">
+                                <div class="lock-screen">
+                                    <div class="lock-wallpaper"></div>
+                                    <div class="lock-content">
+                                        <div class="lock-time" id="lock-time">22:07</div>
+                                        <div class="lock-date">Wednesday, 18 February</div>
+                                        <div class="lock-unlock">Swipe up to unlock</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Aadhaar app -->
+                            <div class="screen-state" id="v-app">
+                                <div class="aadhaar-app">
+                                    <div class="app-topbar">
+                                        <span class="back">‹</span>
+                                        <div class="title-wrap">
+                                            <div class="app-name">mAadhaar</div>
+                                            <div class="app-sub">UIDAI · Govt. of India</div>
+                                        </div>
+                                        <span class="uidai-badge">🔒 Secure</span>
+                                    </div>
+                                    <div class="app-body">
+                                        <div class="app-card">
+                                            <div class="app-card-title">Aadhaar Verification</div>
+                                            <div class="app-field">
+                                                <label>Aadhaar Number</label>
+                                                <div class="val" id="uid-display">_ _ _ _&nbsp;&nbsp;_ _ _ _&nbsp;&nbsp;_ _ _ _</div>
+                                            </div>
+                                        </div>
+                                        <div class="app-card" id="otp-card" style="display:none;">
+                                            <div class="app-card-title">Enter OTP</div>
+                                            <div class="app-field">
+                                                <label>Sent to +91-98XXXXXX12</label>
+                                                <div class="otp-row" id="otp-digits">
+                                                    <div class="otp-d"></div>
+                                                    <div class="otp-d"></div>
+                                                    <div class="otp-d"></div>
+                                                    <div class="otp-d"></div>
+                                                    <div class="otp-d"></div>
+                                                    <div class="otp-d"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="app-card" id="zkp-card" style="display:none;">
+                                            <div class="app-card-title">ZKP Authentication</div>
+                                            <div class="app-field">
+                                                <label>Challenge Nonce</label>
+                                                <div class="val zkp-nonce">a3f9c2b1...e72b4d8f</div>
+                                            </div>
+                                            <div class="zkp-section">
+                                                <div class="zkp-ring-wrap">
+                                                    <div class="zkp-ring" id="zkp-ring"></div>
+                                                    <div class="zkp-check" id="zkp-check">✅</div>
+                                                </div>
+                                                <div class="zkp-label" id="zkp-label">Signing with device key…<br><span class="zkp-algo">ECDSA P-256</span></div>
+                                            </div>
+                                        </div>
+                                        <div id="v-status-wrap" class="v-status-wrap-hidden">
+                                            <span class="status-pill" id="v-status-pill"></span>
+                                        </div>
+                                        <button class="app-action-btn v-action-hidden" id="v-action-btn"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="home-bar"><div class="home-pill"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COL 2: SECURITY GATEWAY -->
+            <div class="gateway-wrap">
+                <div class="pulse-arrow" id="arrow-left">
+                    <span class="arrow-icon">⟵</span>
+                    <div class="pulse-dot blue" id="pulse-l"></div>
+                </div>
+                <div class="gw-box">
+                    <div class="gw-title">🛡️ Security Gateway</div>
+                    <div class="gw-icon" id="gw-icon">⏳</div>
+                    <div class="gw-status gw-neutral" id="gw-status">Waiting...</div>
+                    <div class="gw-log" id="gw-log"><span class="gl gl-info"># Gateway ready</span></div>
+                </div>
+                <div class="pulse-arrow" id="arrow-right">
+                    <span class="arrow-icon">⟶</span>
+                    <div class="pulse-dot blue" id="pulse-r"></div>
+                </div>
+            </div>
+
+            <!-- COL 3: ATTACKER -->
+            <div class="laptop-wrap">
+                <div class="device-label">🕵️ Attacker's Machine</div>
+                <div class="laptop">
+                    <div class="laptop-lid">
+                        <div class="laptop-screen-inner">
+                            <div class="laptop-titlebar">
+                                <div class="ltb-dot r"></div>
+                                <div class="ltb-dot y"></div>
+                                <div class="ltb-dot g"></div>
+                                <span class="ltb-title">root@kali-linux: ~/attack</span>
+                            </div>
+                            <div class="laptop-terminal" id="laptop-term">
+                                <span class="lt-line lt-dim"># SIM swap toolkit v3.1</span>
+                                <span class="lt-line lt-prompt">root@kali:~# <span class="lt-cursor">_</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="laptop-hinge"></div>
+                    <div class="laptop-base"></div>
+                    <div class="laptop-foot"></div>
+                </div>
+
+                <div class="device-label rogue-label">📱 Rogue SIM Device</div>
+                <div class="rogue-phone">
+                    <div class="rogue-screen">
+                        <div class="rogue-notch"></div>
+                        <div class="rogue-sms-notif" id="att-sms">
+                            <div class="rogue-sms-icon">💬</div>
+                            <div class="sms-meta">
+                                <div class="sms-app-row">
+                                    <span class="rogue-app-name">Messages · UIDAI</span>
+                                    <span class="sms-time">now</span>
+                                </div>
+                                <div class="rogue-sender">UIDAI-OTP</div>
+                                <div class="rogue-body" id="att-sms-text">OTP: <strong>847291</strong> — intercepted ✓</div>
+                            </div>
+                        </div>
+                        <div class="rogue-statusbar">
+                            <span id="att-carrier">Airtel (SIM Swap)</span>
+                            <div class="rogue-signal">
+                                <div class="rbar rb1"></div>
+                                <div class="rbar rb2"></div>
+                                <div class="rbar rb3"></div>
+                                <div class="rbar rb4"></div>
+                            </div>
+                        </div>
+                        <div class="rogue-content">
+                            <div class="rogue-state visible" id="att-idle">
+                                <div class="rogue-idle-screen">
+                                    <div class="rogue-idle-icon">📡</div>
+                                    <div class="rogue-idle-text">Monitoring<br>+91-98XXXXXX12<br><span class="rogue-swap-label">SIM SWAP ACTIVE</span></div>
+                                </div>
+                            </div>
+                            <div class="rogue-state" id="att-active">
+                                <div class="rogue-active-screen">
+                                    <span id="att-screen-text" class="rogue-green-text"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rogue-home"><div class="rogue-home-pill"></div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /sim-stage -->
+
+    <style>
+        .nav-btn {
+            background: linear-gradient(135deg, #161b22, #0d1117);
+            color: #c9d1d9;
+            font-family: 'Source Code Pro', monospace;
+            font-size: .9rem;
+            font-weight: 600;
+            padding: 14px 28px;
+            border-radius: 10px;
+            border: 2px solid #30363d;
+            cursor: pointer;
+            transition: all .3s;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #1c2128, #161b22);
+            border-color: #58a6ff;
+            color: #58a6ff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(88, 166, 255, .2);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #0d1117, #0a0e13);
+            border-color: #21262d;
+            color: #484f58;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .step-info-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 360px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+        }
+
+        #step-desc {
+            font-size: 1rem;
+            color: #2c3e50;
+            text-align: center;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            transition: color .3s;
+        }
+
+        #step-counter {
+            font-size: .72rem;
+            color: #6c757d;
+            font-family: 'Source Code Pro', monospace;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+    </style>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin:50px auto 30px;padding:0 20px;max-width:900px;">
+        <div class="step-info-wrap" style="width:100%;max-width:600px;">
+            <div id="step-desc">Ready to start simulation</div>
+            <div id="step-counter">STEP 0 / 8</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
+            <button class="nav-btn" id="prev-btn" onclick="goPrev()">
+                <span style="font-size:1.3rem;line-height:0;margin-bottom:2px;">&#8249;</span> Previous
+            </button>
+            <button class="nav-btn" id="next-btn" onclick="goNext()">
+                Next Step <span style="font-size:1.3rem;line-height:0;margin-bottom:2px;">&#8250;</span>
+            </button>
+        </div>
+    </div>
+    </div>
+
+    <footer>National Informatics Centre &nbsp;|&nbsp; Proof-of-Concept: Intent-Aware Security Gateway &nbsp;|&nbsp;
+        Demonstration only — does not represent live government systems.</footer>
+    <script src="compare.js"></script>
+</body>
+
+</html>

@@ -33,8 +33,11 @@
     <nav class="nav-bar">
         <div class="nav-links">
             <span class="active">DASHBOARD MONITORING SYSTEM</span>
+            <a href="/compare/" target="_blank"
+                style="color: var(--nic-orange); text-decoration: none; font-size: 0.9rem; font-weight: 700; margin-left: 20px; opacity: 0.95; letter-spacing: 0.3px;">⚖️
+                Before vs After</a>
         </div>
-        <div style="font-size: 0.8rem; opacity: 0.8;">v2.0.1 (Stable)</div>
+        <div style="font-size: 0.8rem; opacity: 0.8;">v2.1.0 (Stable)</div>
     </nav>
 
     <!-- 4. Main Layout -->
@@ -92,6 +95,33 @@
                         <span id="ml-status" class="status-badge enabled">ON</span>
                     </div>
                 </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">🔄 Demo Controls</div>
+                <button id="reset-demo-btn" title="Clear all stats and logs to start a fresh demo run" style="
+                        width: 100%;
+                        padding: 10px;
+                        background: #dc3545;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        font-weight: 700;
+                        font-size: 0.85rem;
+                        cursor: pointer;
+                        letter-spacing: 0.5px;
+                        transition: background 0.2s, transform 0.1s;
+                    " onmouseover="this.style.background='#b02a37'" onmouseout="this.style.background='#dc3545'"
+                    onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">🔄
+                    RESET DEMO</button>
+                <div id="reset-status-msg" style="
+                        margin-top: 8px;
+                        font-size: 0.78rem;
+                        color: #28a745;
+                        text-align: center;
+                        min-height: 16px;
+                        font-weight: 600;
+                    "></div>
             </div>
 
             <div class="panel-section">

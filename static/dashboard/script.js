@@ -71,8 +71,77 @@ function setupControls() {
         updateStatusBadge('ml-status', enabled);
     });
 
+    // Reset Demo button
+    document.getElementById('reset-demo-btn').addEventListener('click', resetDemo);
+
     // Load initial security config
     loadSecurityConfig();
+}
+
+async function resetDemo() {
+    const btn = document.getElementById('reset-demo-btn');
+    const msg = document.getElementById('reset-status-msg');
+
+    // Disable button during request to prevent double-clicks
+    btn.disabled = true;
+    btn.textContent = 'Resetting...';
+    btn.style.background = '#6c757d';
+    msg.style.color = '#6c757d';
+    msg.textContent = 'Contacting server...';
+
+    try {
+        const response = await fetch('/stats/reset', { method: 'POST' });
+
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+
+        // Clear all three charts immediately
+        trafficChart.data.labels = [];
+        trafficChart.data.datasets[0].data = [];
+        trafficChart.update('none');
+
+        scatterChart.data.datasets[0].data = [];
+        scatterChart.update('none');
+
+        zkpChart.data.datasets[0].data = [0, 0];
+        zkpChart.update('none');
+
+        // Reset metric cards
+        document.getElementById('m-total').textContent = '0';
+        document.getElementById('m-blocked').textContent = '0';
+        document.getElementById('m-pass-rate').textContent = '100%';
+
+        // Clear log table
+        document.getElementById('log-table-body').innerHTML = '';
+
+        // Reset status boxes to nominal
+        const statusBox = document.getElementById('system-status-box');
+        statusBox.className = 'status-normal';
+        statusBox.textContent = 'SYSTEM STATUS: OPERATIONAL — ALL SYSTEMS NOMINAL';
+
+        const attackIndicator = document.getElementById('attack-indicator');
+        if (attackIndicator) {
+            attackIndicator.style.background = '#e9f7ef';
+            attackIndicator.style.borderLeft = '4px solid #28a745';
+            attackIndicator.style.color = '#155724';
+            attackIndicator.innerHTML = 'NO ACTIVE ATTACK';
+        }
+
+        // Show success message, fade it after 3 seconds
+        msg.style.color = '#28a745';
+        msg.textContent = '✓ Demo reset!';
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+
+    } catch (err) {
+        msg.style.color = '#dc3545';
+        msg.textContent = '✗ Reset failed';
+        console.error('[Reset] Failed:', err);
+        setTimeout(() => { msg.textContent = ''; }, 4000);
+    } finally {
+        // Re-enable button
+        btn.disabled = false;
+        btn.textContent = '🔄 RESET DEMO';
+        btn.style.background = '#dc3545';
+    }
 }
 
 async function updateSecurityConfig(key, value) {

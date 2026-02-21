@@ -78,5 +78,4 @@ python attacker.py
   - `zkp-client.js`: Client-side ZKP library for key generation and cryptographic signing
 - `hacker/`: Hacker console interface
 - `dashboard/`: Real-time security monitoring dashboard (HTML/JS/Chart.js)
-- `demo/`: Visual ZKP security demonstration
-  - `index.html`: Interactive comparison of legitimate vs. attack scenarios
+- `compare/`: Security architecture comparison UI (Legitimate vs. Attack scenarios)
