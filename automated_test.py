@@ -1,7 +1,6 @@
 import requests
 import time
 import random
-import threading
 
 API_URL = "http://127.0.0.1:8000/verify"
 

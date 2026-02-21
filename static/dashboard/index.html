@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIC Security Operations Centre</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Zoom Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <!-- Removed date-adapter dependency for stability -->
+</head>
+
+<body>
+
+    <!-- 1. Top Strip -->
+    <div class="govt-header-strip">
+        <div>GOVERNMENT OF INDIA &nbsp;&nbsp; Ministry of Electronics & Information Technology</div>
+    </div>
+
+    <!-- 2. Main Header -->
+    <header class="nic-header">
+        <img src="/portal/ashoka_emblem.svg" alt="Ashoka Emblem" class="emblem">
+        <div class="header-text">
+            <h2>National Informatics Centre</h2>
+            <h1>Security Operations Centre</h1>
+        </div>
+    </header>
+
+    <!-- 3. Nav Bar -->
+    <nav class="nav-bar">
+        <div class="nav-links">
+            <span class="active">DASHBOARD MONITORING SYSTEM</span>
+        </div>
+        <div style="font-size: 0.8rem; opacity: 0.8;">v2.0.1 (Stable)</div>
+    </nav>
+
+    <!-- 4. Main Layout -->
+    <div class="container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="panel-section">
+                <div class="panel-title">System Status</div>
+                <div class="status-indicator" id="connection-status">Status: CHECKING...</div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Threat Status</div>
+                <div id="attack-indicator" style="
+                    padding: 10px; 
+                    background: #e9f7ef; 
+                    border-left: 4px solid #28a745; 
+                    color: #155724; 
+                    font-weight: 600;
+                    font-size: 0.85rem;">
+                    NO ACTIVE ATTACK
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Monitoring Options</div>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
+                    <input type="checkbox" id="auto-refresh" checked> Auto-Refresh
+                </label>
+                <div style="margin-top: 10px;">
+                    <label style="font-size: 0.8rem;">Frequency: <span id="freq-val">1.0</span>s</label>
+                    <input type="range" id="refresh-rate" min="0.5" max="5.0" step="0.5" value="1.0"
+                        style="width: 100%;">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">Legend</div>
+                <div class="legend-item">
+                    <div class="dot safe"></div> Safe Request
+                </div>
+                <div class="legend-item">
+                    <div class="dot blocked"></div> Blocked Threat
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- System Status -->
+            <div id="system-status-box" class="status-normal">
+                SYSTEM STATUS: INITIALIZING...
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Requests</div>
+                    <div class="metric-value" id="m-total">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Threats Blocked</div>
+                    <div class="metric-value" id="m-blocked">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Uptime Guarantee</div>
+                    <div class="metric-value" id="m-uptime">100%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Threat Level</div>
+                    <div class="metric-value" id="m-threat">Low</div>
+                </div>
+            </div>
+
+            <h3 style="color: var(--nic-blue); margin-bottom: 15px; padding-bottom: 10px;">
+                Live Traffic Monitor</h3>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-box">
+                    <div class="chart-title">Traffic Volume (Real-time)</div>
+                    <canvas id="trafficChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">Anomaly Detection Analysis</div>
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="chart-box">
+                <div class="chart-title">Audit Log (Recent Activity)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Action</th>
+                            <th>Endpoint</th>
+                            <th>Source</th>
+                            <th>Risk Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

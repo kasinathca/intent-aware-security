@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROOT@KALI: ~</title>
+    <style>
+        body {
+            background-color: #0c0c0c;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        /* Custom Themed Scrollbar */
+        #terminal::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #terminal::-webkit-scrollbar-track {
+            background: #000;
+            border-left: 1px solid #0f0;
+        }
+
+        #terminal::-webkit-scrollbar-thumb {
+            background: #0f0;
+            border-radius: 2px;
+        }
+
+        #terminal::-webkit-scrollbar-thumb:hover {
+            background: #00ff00;
+            box-shadow: 0 0 5px #0f0;
+        }
+
+        /* Firefox scrollbar */
+        #terminal {
+            scrollbar-width: thin;
+            scrollbar-color: #0f0 #000;
+        }
+
+        #terminal {
+            width: 100%;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            text-align: left;
+            padding: 20px;
+            padding-bottom: 80px;
+            /* Space for fixed input */
+        }
+
+        .prompt {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .command {
+            color: #fff;
+        }
+
+        .output {
+            color: #ccc;
+            margin-bottom: 2px;
+        }
+
+        .error {
+            color: #ff5555;
+        }
+
+        .success {
+            color: #55ff55;
+        }
+
+        .system-msg {
+            color: #ffff55;
+            font-weight: bold;
+        }
+
+        /* Manual Mode Prompt styling */
+        .manual-mode .prompt {
+            color: #00bfff;
+        }
+
+        /* Fixed Input Line at Bottom with Divider */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0c0c0c;
+            border-top: 2px solid #0f0;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 999;
+            box-shadow: 0 -5px 15px rgba(0, 255, 0, 0.1);
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            flex: 1;
+        }
+
+        /* HUD - Top Right */
+        #hud {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            background: rgba(0, 10, 0, 0.95);
+            border: 1px solid #0f0;
+            padding: 15px;
+            font-size: 0.85rem;
+            display: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            text-align: left;
+            z-index: 1000;
+        }
+
+        .hud-title {
+            text-align: center;
+            border-bottom: 1px solid #0f0;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        /* Graph Bar */
+        .bar-container {
+            height: 10px;
+            background: #003300;
+            margin-top: 5px;
+            position: relative;
+            width: 100%;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #0f0;
+            width: 0%;
+            transition: width 0.2s, background-color 0.2s;
+        }
+
+        /* Mode Indicator - Bottom Right */
+        #mode-indicator {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #000;
+            border: 2px solid;
+            font-weight: bold;
+            display: none;
+            z-index: 1000;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        .mode-auto {
+            border-color: #0f0;
+            color: #0f0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            animation: pulse-green 2s infinite;
+        }
+
+        .mode-manual {
+            border-color: #00bfff;
+            color: #00bfff;
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HUD -->
+    <div id="hud">
+        <div class="hud-title">ATTACK TELEMETRY</div>
+        <div class="hud-row"><span>THREADS:</span> <span id="hud-threads">0</span></div>
+        <div class="hud-row"><span>RPS:</span> <span id="hud-rps">0</span></div>
+
+        <div style="margin: 5px 0; font-size:0.8em; color:#888;">NETWORK LOAD</div>
+        <div class="bar-container">
+            <div id="hud-bar" class="bar-fill"></div>
+        </div>
+
+        <div style="margin-top:15px; border-top:1px dashed #005500; padding-top:10px;">
+            <div class="hud-row"><span>SUCCESS:</span> <span id="hud-success" style="color:#55ff55">0</span></div>
+            <div class="hud-row"><span>BLOCKED:</span> <span id="hud-blocked" style="color:#ff5555">0</span></div>
+        </div>
+    </div>
+
+    <!-- Mode Indicator -->
+    <div id="mode-indicator"></div>
+
+    <!-- Terminal Area -->
+    <div id="terminal">
+        <div class="output">
+            Kali GNU/Linux Rolling [Version 2025.1]
+            (c) 2025 Offensive Security. All rights reserved.
+
+            Type 'help' for a list of commands.
+        </div>
+
+        <div id="history"></div>
+    </div>
+
+    <!-- Fixed Input Container with Divider -->
+    <div class="input-container">
+        <div class="input-line">
+            <span class="prompt">root@kali:~#</span>
+            <input type="text" id="cmd-input" autofocus autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        const TERMINAL = document.getElementById('terminal');
+        const HISTORY = document.getElementById('history');
+        const INPUT = document.getElementById('cmd-input');
+
+        // HUD Elements
+        const HUD = document.getElementById('hud');
+        const HUD_RPS = document.getElementById('hud-rps');
+        const HUD_THREADS = document.getElementById('hud-threads');
+        const HUD_BAR = document.getElementById('hud-bar');
+        const HUD_SUCCESS = document.getElementById('hud-success');
+        const HUD_BLOCKED = document.getElementById('hud-blocked');
+
+        // Mode Element
+        const MODE_INDICATOR = document.getElementById('mode-indicator');
+
+        let isAttackRunning = false;
+        let attackInterval = null;
+        let attackType = "";
+
+        let cmdHistory = [];
+        let historyIdx = -1;
+
+        // --- MODE MANAGMENT ---
+        function setMode(mode) {
+            MODE_INDICATOR.style.display = 'block';
+
+            if (mode === 'AUTO') {
+                MODE_INDICATOR.innerText = "AUTOMATED ATTACK SEQUENCE";
+                MODE_INDICATOR.className = "mode-auto";
+                document.body.classList.remove('manual-mode');
+            } else {
+                MODE_INDICATOR.innerText = "KEYBOARD CONTROL (MANUAL)";
+                MODE_INDICATOR.className = "mode-manual";
+                document.body.classList.add('manual-mode');
+            }
+        }
+
+        // --- COMMAND PROCESSING ---
+        function processCommand(cmd) {
+            // Echo command
+            const cmdDiv = document.createElement('div');
+            cmdDiv.innerHTML = `<span class="prompt">root@kali:~#</span> <span class="command">${cmd}</span>`;
+            HISTORY.appendChild(cmdDiv);
+
+            const parts = cmd.split(' ');
+            const base = parts[0].toLowerCase();
+
+            if (base === 'help') {
+                printOutput(`
+Available Commands:
+  <span class="success">help</span>                Show this help menu
+  <span class="success">clear</span>               Clear terminal screen
+  <span class="success">nmap</span> [target]       Scan target for open ports
+  <span class="success">exploit</span> --target    Launch automated attack simulation
+  <span class="success">scrape</span> --all         Launch bulk data scraping simulation
+  <span class="success">stop</span>                 Stop running attacks
+  <span class="success">status</span>               Check attack status
+            `);
+            } else if (base === 'clear') {
+                HISTORY.innerHTML = "";
+            } else if (base === 'nmap') {
+                simulateNmap();
+            } else if (base === 'exploit') {
+                startAttack('brute');
+            } else if (base === 'scrape') {
+                startAttack('scrape');
+            } else if (base === 'stop') {
+                stopAttack();
+            } else if (base === 'status') {
+                if (isAttackRunning) printOutput(`Attack in progress: ${attackType.toUpperCase()}`, "success");
+                else printOutput("No active attacks. System IDLE.", "output");
+            } else {
+                printOutput(`bash: ${base}: command not found`, "error");
+            }
+            scrollToBottom();
+        }
+
+        // --- ATTACK SIMULATION ---
+        function startAttack(type) {
+            if (isAttackRunning) {
+                printOutput("Attack already running. Stop it first.", "error");
+                return;
+            }
+
+            isAttackRunning = true;
+            attackType = type;
+            HUD.style.display = 'block';
+            setMode('AUTO');
+
+            let successCount = 0;
+            let blockedCount = 0;
+            HUD_SUCCESS.innerText = "0";
+            HUD_BLOCKED.innerText = "0";
+            HUD_THREADS.innerText = Math.floor(Math.random() * 20) + 40; // 40-60 threads
+
+            printOutput(`[*] Initializing ${type === 'brute' ? 'Hydra v9.1' : 'Scrapy v2.5'}...`);
+            printOutput(`[+] Target: 127.0.0.1:8000/verify`);
+            printOutput(`[+] Mode: ${type === 'brute' ? 'Dictionary Attack' : 'Bulk Extraction'}`);
+
+            attackInterval = setInterval(async () => {
+                if (!isAttackRunning) return;
+
+                let payload = {};
+                if (type === 'brute') {
+                    payload = {
+                        hour: 3,
+                        request_rate: Math.floor(Math.random() * 500) + 100,
+                        payload_size_kb: 2,
+                        geo_location: "India",
+                        endpoint: "/admin_login"
+                    };
+                } else {
+                    payload = {
+                        hour: 2,
+                        request_rate: 20,
+                        payload_size_kb: Math.floor(Math.random() * 100) + 50,
+                        geo_location: "Russia",
+                        endpoint: "/bulk_export"
+                    };
+                }
+
+                try {
+                    // Visual Updates
+                    const rps = Math.floor(Math.random() * 120) + 80;
+                    HUD_RPS.innerText = rps;
+
+                    // Bar Animation
+                    let width = Math.min((rps / 200) * 100, 100);
+                    HUD_BAR.style.width = width + "%";
+
+                    // Color Logic: High Load = Red/Orange
+                    if (width > 80) HUD_BAR.style.backgroundColor = "#ff3333";
+                    else if (width > 50) HUD_BAR.style.backgroundColor = "#ffaa33";
+                    else HUD_BAR.style.backgroundColor = "#0f0";
+
+                    // Network Request
+                    const res = await fetch('/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+
+                    // Handle FastAPI 403 Error Structure
+                    // Blocked requests come as { detail: { status: "BLOCKED", ... } }
+                    const status = (data.detail && data.detail.status) || data.status;
+                    const risk = (data.detail && data.detail.risk_score) || data.risk_score;
+
+                    if (status === "BLOCKED") blockedCount++;
+                    else successCount++;
+
+                    HUD_SUCCESS.innerText = successCount;
+                    HUD_BLOCKED.innerText = blockedCount;
+
+                    // Log output occasionally (don't flood too hard visually)
+                    if (Math.random() > 0.85) {
+                        const color = status === "BLOCKED" ? "error" : "success";
+                        const label = status === "BLOCKED" ? "[BLOCKED]" : "[SUCCESS]";
+                        printOutput(`[${new Date().toLocaleTimeString()}] Sent Payload... <span class="${color}">${label}</span> Risk: ${risk?.toFixed(2)}`);
+                    }
+                } catch (e) { }
+
+            }, 200); // 5 RPS per thread simulation
+        }
+
+        function stopAttack() {
+            if (!isAttackRunning) return;
+            isAttackRunning = false;
+            clearInterval(attackInterval);
+            HUD.style.display = 'none';
+            setMode('MANUAL');
+            printOutput("[!] Attack Paused. Type 'exploit' to resume simulation.", "error");
+        }
+
+        function simulateNmap() {
+            printOutput("Starting Nmap 7.94 ( https://nmap.org ) at 2025-02-17 11:30 IST");
+            setTimeout(() => printOutput("Nmap scan report for 192.168.1.105"), 500);
+            setTimeout(() => printOutput("Host is up (0.00023s latency)."), 700);
+            setTimeout(() => printOutput(`
+PORT      STATE SERVICE
+22/tcp    open  ssh
+80/tcp    open  http
+443/tcp   open  https
+8000/tcp  open  http-alt
+MAC Address: 00:0C:29:BD:E7:55 (VMware)
+
+Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
+            `), 1500);
+        }
+
+        // --- UTILS ---
+        function printOutput(text, type = "output") {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = text;
+            HISTORY.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            TERMINAL.scrollTop = TERMINAL.scrollHeight;
+        }
+
+        // --- INPUT HANDLING ---
+        INPUT.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                const cmd = INPUT.value.trim();
+                if (cmd) {
+                    processCommand(cmd);
+                    cmdHistory.push(cmd);
+                    historyIdx = cmdHistory.length;
+                }
+                INPUT.value = "";
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIdx > 0) {
+                    historyIdx--;
+                    INPUT.value = cmdHistory[historyIdx];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIdx < cmdHistory.length - 1) {
+                    historyIdx++;
+                    INPUT.value = cmdHistory[historyIdx];
+                } else {
+                    historyIdx = cmdHistory.length;
+                    INPUT.value = "";
+                }
+            }
+        });
+
+        // Global Keydown for Ctrl+C
+        document.addEventListener('keydown', e => {
+            if (e.key === 'c' && e.ctrlKey) {
+                e.preventDefault();
+                if (isAttackRunning) {
+                    stopAttack();
+                    printOutput("^C [Interrupted]", "error");
+                } else {
+                    const cmdDiv = document.createElement('div');
+                    cmdDiv.innerHTML = `<span class="prompt">root@kali:~#</span> <span class="command">${INPUT.value}^C</span>`;
+                    HISTORY.appendChild(cmdDiv);
+                    INPUT.value = "";
+                    scrollToBottom();
+                }
+            }
+        });
+
+        document.addEventListener('click', () => INPUT.focus());
+
+        window.onload = function () {
+            INPUT.focus();
+            printOutput("System Ready.", "success");
+            setMode('MANUAL');
+        }
+    </script>
+</body>
+
+</html>

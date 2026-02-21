@@ -37,8 +37,9 @@ def zkp_demo():
     print("\n[4] VERIFIER: Validating Proof...")
     
     # Simulation logic
+    from datetime import datetime
     user_year = int(secret_dob.split("-")[0])
-    current_year = 2026
+    current_year = datetime.now().year
     age = current_year - user_year
     
     if age > 18:

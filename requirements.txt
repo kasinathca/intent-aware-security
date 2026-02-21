@@ -4,6 +4,4 @@ scikit-learn
 fastapi
 uvicorn
 requests
-streamlit
 joblib
-matplotlib

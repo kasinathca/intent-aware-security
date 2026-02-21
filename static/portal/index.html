@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarthi Parivahan - Ministry of Road Transport & Highways</title>
+    <style>
+        :root {
+            --gov-blue: #0056b3;
+            --gov-saf: #ff9933;
+            --gov-green: #138808;
+            --text-dark: #333;
+            --bg-light: #f4f4f4;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: white;
+            border-bottom: 4px solid var(--gov-saf);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .emblem {
+            height: 60px;
+            /* Placeholder for Ashoka Portal */
+        }
+
+        .header-text h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--gov-blue);
+            text-transform: uppercase;
+        }
+
+        .header-text p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .main-container {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section h2 {
+            border-bottom: 2px solid var(--gov-blue);
+            padding-bottom: 10px;
+            color: var(--gov-blue);
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--gov-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+        }
+
+        .btn-auto {
+            background-color: var(--gov-green);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-stop {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* Simulation Visuals */
+        .status-panel {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .log-container {
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            border: 1px solid #ddd;
+            background: white;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px dotted #eee;
+        }
+
+        .log-success {
+            color: green;
+        }
+
+        .log-processing {
+            color: blue;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Auto-typing effect cursor */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <!-- Placeholder for Emblem -->
+            <!-- Ashoka Emblem -->
+            <img src="ashoka_emblem.svg" alt="Ashoka Emblem" style="height: 60px; width: auto; margin-right: 15px;">
+            <div class="header-text">
+                <h1>Sarthi Parivahan</h1>
+                <p>Ministry of Road Transport & Highways, Government of India</p>
+            </div>
+        </div>
+        <div style="font-size: 0.9rem;">
+            Official Login | <span style="color:red">Secure Portal</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="main-container">
+            <div class="form-section">
+                <h2>Driver License Verification</h2>
+                <p style="font-size: 0.9rem; color: #666;">Enter details to retrieve driver history and challan status.
+                </p>
+
+                <div class="form-group">
+                    <label>DL Number / Application No.</label>
+                    <input type="text" id="dl-input" placeholder="Example: KA01 20220001234">
+                </div>
+
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="dob-input">
+                </div>
+
+                <div class="form-group">
+                    <label>RTO Zone</label>
+                    <select id="rto-select">
+                        <option value="KA-01">Bangalore Central (KA-01)</option>
+                        <option value="KA-05">Bangalore South (KA-05)</option>
+                        <option value="DL-01">Delhi North (DL-01)</option>
+                        <option value="MH-02">Mumbai West (MH-02)</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="manualVerify()" id="btn-verify">Verify Details</button>
+                    <button class="btn-auto" onclick="toggleAutoPilot()" id="btn-auto">
+                        Auto-Process Queue
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-panel">
+                <h3 style="margin-top:0; font-size:1rem; border-bottom:1px solid #ddd; padding-bottom:5px;">System
+                    Activity</h3>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px;">
+                    <span>Queue Status:</span>
+                    <span id="queue-status" style="font-weight:bold; color:green;">Idle</span>
+                </div>
+                <div class="log-container" id="activity-log">
+                    <div class="log-entry" style="color:#888;">System initialized... Waiting for input.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2025 Ministry of Road Transport & Highways. All Rights Reserved. | NIC Designed & Developed
+    </footer>
+
+    <script>
+        const LOG_CONTAINER = document.getElementById('activity-log');
+        const BTN_AUTO = document.getElementById('btn-auto');
+        const INPUT_DL = document.getElementById('dl-input');
+        const INPUT_DOB = document.getElementById('dob-input');
+        const BTN_VERIFY = document.getElementById('btn-verify');
+        const QUEUE_STATUS = document.getElementById('queue-status');
+
+        let isAutoPilot = false;
+        let autoTimeout = null;
+        let typeTimeout = null;
+
+        // Web Worker for background-safe timing
+        let timerWorker = null;
+        let workerTimers = {};
+        let workerRequestId = 0;
+
+        try {
+            timerWorker = new Worker('timer-worker.js');
+            timerWorker.onmessage = function (e) {
+                if (e.data.type === 'timeout') {
+                    const callback = workerTimers[e.data.id];
+                    if (callback) {
+                        callback();
+                        delete workerTimers[e.data.id];
+                    }
+                } else if (e.data.type === 'timerId') {
+                    // Store the worker timer ID for potential clearing
+                    const reqData = workerTimers[e.data.requestId];
+                    if (reqData) {
+                        reqData.workerId = e.data.timerId;
+                    }
+                }
+            };
+        } catch (e) {
+            console.warn('Web Worker not available, using standard setTimeout');
+        }
+
+        // Background-safe setTimeout replacement
+        function setTimeoutSafe(callback, delay) {
+            if (timerWorker) {
+                const requestId = workerRequestId++;
+                workerTimers[requestId] = callback;
+                timerWorker.postMessage({ action: 'setTimeout', id: requestId, delay: delay });
+                return requestId;
+            } else {
+                return setTimeout(callback, delay);
+            }
+        }
+
+        function clearTimeoutSafe(id) {
+            if (timerWorker && workerTimers[id]) {
+                const workerData = workerTimers[id];
+                if (workerData.workerId !== undefined) {
+                    timerWorker.postMessage({ action: 'clearTimeout', id: workerData.workerId });
+                }
+                delete workerTimers[id];
+            } else {
+                clearTimeout(id);
+            }
+        }
+
+        // Fake Data Pool
+        const dummyData = [
+            { dl: "KA01 20220005521", dob: "1990-05-12", rto: "KA-01" },
+            { dl: "MH02 20198827101", dob: "1985-11-23", rto: "MH-02" },
+            { dl: "DL04 20210092837", dob: "1998-02-14", rto: "DL-01" },
+            { dl: "TN09 20207718292", dob: "1976-08-30", rto: "KA-05" },
+            { dl: "KL07 20236615243", dob: "1992-12-01", rto: "KA-01" }
+        ];
+
+        function addLog(message, type = "normal") {
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${message}`;
+            if (type === 'success') div.classList.add('log-success');
+            if (type === 'processing') div.classList.add('log-processing');
+            if (type === 'error') div.style.color = 'red';
+            LOG_CONTAINER.insertBefore(div, LOG_CONTAINER.firstChild);
+        }
+
+        async function sendVerificationRequest(data) {
+            addLog("Sending verification request...", "processing");
+
+            try {
+                const payload = {
+                    hour: new Date().getHours(),
+                    request_rate: Math.floor(Math.random() * 5) + 1,
+                    payload_size_kb: Math.floor(Math.random() * 5) + 1,
+                    geo_location: "India",
+                    endpoint: "/verify_license"
+                };
+
+                const response = await fetch('/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.status === "ALLOWED") {
+                    addLog(`✓ Details Verified. ID: ${data.dl} (Risk: ${result.risk_score.toFixed(2)})`, "success");
+                } else {
+                    addLog(`X Access Denied. ID: ${data.dl} (Risk: ${result.risk_score.toFixed(2)})`, "error");
+                }
+            } catch (e) {
+                addLog("! Network Error: Backend might be down", "error");
+            }
+        }
+
+        async function manualVerify() {
+            // Instant Takover: Stop auto if running
+            if (isAutoPilot) stopAutoPilot();
+
+            const dl = INPUT_DL.value;
+            if (!dl) {
+                alert("Please enter DL Number");
+                return;
+            }
+
+            // UI Feedback
+            INPUT_DL.disabled = true;
+            INPUT_DOB.disabled = true;
+            BTN_VERIFY.innerText = "Verifying...";
+            BTN_VERIFY.style.backgroundColor = "#6c757d";
+
+            await sendVerificationRequest({ dl: dl });
+
+            setTimeout(() => {
+                INPUT_DL.disabled = false;
+                INPUT_DOB.disabled = false;
+                BTN_VERIFY.innerText = "Verify Details";
+                BTN_VERIFY.style.backgroundColor = "var(--gov-blue)";
+                INPUT_DL.focus();
+            }, 800);
+        }
+
+        function typeWriter(text, element, callback) {
+            let i = 0;
+            element.value = "";
+
+            function type() {
+                if (!isAutoPilot) return; // Stop if mode changed
+                if (i < text.length) {
+                    element.value += text.charAt(i);
+                    i++;
+                    typeTimeout = setTimeoutSafe(type, 50);
+                } else {
+                    if (callback) callback();
+                }
+            }
+            type();
+        }
+
+        function runAutoPilotCycle() {
+            if (!isAutoPilot) return;
+
+            QUEUE_STATUS.innerText = "Processing Queue...";
+            QUEUE_STATUS.style.color = "blue";
+
+            const data = dummyData[Math.floor(Math.random() * dummyData.length)];
+
+            // Simulate Entering Data
+            typeWriter(data.dl, INPUT_DL, () => {
+                if (!isAutoPilot) return;
+                INPUT_DOB.value = data.dob;
+                document.getElementById('rto-select').value = data.rto;
+
+                // Short pause before submit
+                autoTimeout = setTimeoutSafe(async () => {
+                    if (!isAutoPilot) return;
+                    await sendVerificationRequest(data);
+
+                    // Clear and Loop
+                    autoTimeout = setTimeoutSafe(() => {
+                        if (!isAutoPilot) return;
+                        INPUT_DL.value = "";
+                        INPUT_DOB.value = "";
+                        // Random delay before next record
+                        autoTimeout = setTimeoutSafe(runAutoPilotCycle, 1500 + Math.random() * 1000);
+                    }, 1000);
+                }, 600);
+            });
+        }
+
+        function startAutoPilot() {
+            isAutoPilot = true;
+            BTN_AUTO.classList.remove('btn-auto');
+            BTN_AUTO.classList.add('btn-stop');
+            BTN_AUTO.innerHTML = 'Stop Auto-Process';
+            BTN_AUTO.style.backgroundColor = "#dc3545"; // Red for stop
+
+            INPUT_DL.disabled = true; // Disable manual input during auto
+            INPUT_DOB.disabled = true;
+
+            runAutoPilotCycle();
+        }
+
+        function stopAutoPilot() {
+            isAutoPilot = false;
+            clearTimeoutSafe(autoTimeout);
+            clearTimeoutSafe(typeTimeout);
+
+            BTN_AUTO.classList.add('btn-auto');
+            BTN_AUTO.classList.remove('btn-stop');
+            BTN_AUTO.innerHTML = 'Auto-Process Queue';
+            BTN_AUTO.style.backgroundColor = "var(--gov-green)";
+
+            QUEUE_STATUS.innerText = "Manual Mode Active";
+            QUEUE_STATUS.style.color = "#333";
+
+            // Re-enable manual inputs
+            INPUT_DL.disabled = false;
+            INPUT_DOB.disabled = false;
+            INPUT_DL.value = ""; // Clear for fresh start
+            INPUT_DOB.value = "";
+            INPUT_DL.focus();
+        }
+
+        function toggleAutoPilot() {
+            if (isAutoPilot) {
+                stopAutoPilot();
+            } else {
+                startAutoPilot();
+            }
+        }
+    </script>
+
+</body>
+
+</html>

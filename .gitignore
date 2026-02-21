@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+*.py[codz]
 *$py.class
 
 # C extensions
@@ -26,7 +26,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# PyInstaller
+# before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -44,16 +44,72 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
+*.py.cover
 .hypothesis/
 .pytest_cache/
 cover/
 
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# IPython
+profile_default/
+ipython_config.py
+
+# pdm.toml
+.pdm-python
+.pdm-build/
+
+# in the .venv directory. It is recommended not to include this directory in version control.
+.pixi
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+*.rdb
+*.aof
+*.pid
+
+# RabbitMQ
+mnesia/
+rabbitmq/
+rabbitmq-data/
+
+# ActiveMQ
+activemq-data/
+
+# SageMath parsed files
+*.sage.py
+
 # Environments
 .env
+.envrc
 .venv
 env/
 venv/
@@ -61,19 +117,48 @@ ENV/
 env.bak/
 venv.bak/
 
-# IDE and Editor files
+# IDE and Editor settings (VS Code, IntelliJ, Spyder, Rope, etc.)
 .vscode/
 .idea/
-*.swp
-*.swo
 .spyderproject
 .spyproject
 .ropeproject
+*.swp
+*.swo
+
+# mkdocs documentation
+/site
 
 # mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Learn more at https://abstra.io/docs
+.abstra/
+
+# Ruff stuff:
+.ruff_cache/
+
+# PyPI configuration file
+.pypirc
+
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
+
+# Streamlit
+.streamlit/secrets.toml
 
 # OS related files
 .DS_Store
@@ -91,9 +176,7 @@ data/model.pkl
 data/traffic_logs.csv
 *.csv
 *.pkl
-*.log
 *.sqlite
-*.sqlite3
 *.db
 
 # AI Assistant generated artifacts

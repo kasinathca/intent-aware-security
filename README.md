@@ -32,37 +32,46 @@ python train_model.py
 
 ## 🖥️ Running the Demo
 
-For the best presentation experience, open **3 separate terminal windows**:
+### Option 1: Automated Launch (Recommended)
+Simply run the included batch file to start everything:
+```bash
+start_system.bat
+```
+*This will launch the API Gateway and open all three interfaces (Portal, Hacker Console, Dashboard) in your browser.*
 
-### Terminal 1: The API Gateway (Backend)
+### Option 2: Manual Launch
+For manual control, open **2 separate terminal windows**:
+
+#### Terminal 1: The API Gateway (Backend)
 Start the FastAPI server that processes verification requests.
 ```bash
 python app.py
 ```
 *Server will start at http://127.0.0.1:8000*
 
-### Terminal 2: The Defender Dashboard (Frontend)
-Launch the live visualization dashboard.
-```bash
-python -m streamlit run dashboard.py
-```
-*Browser will open automatically showing the dashboard.*
-
-### Terminal 3: The Attacker Console
+#### Terminal 2: The Attacker Console
 Launch the hacker simulation tool.
 ```bash
 python attacker.py
 ```
-*Use the menu to launch attacks and watch them get blocked in real-time on the Dashboard.*
+*Use the menu to launch attacks and watch them get blocked in real-time.*
+
+**Dashboard Access:** Open `http://localhost:8000/dashboard/index.html` in your browser.
 
 ---
 
 ## 📂 Project Structure
 
-- `config.py`: Configuration settings (thresholds, paths).
-- `generate_data.py`: Creates synthetic training data.
-- `train_model.py`: Trains the Isolation Forest model.
-- `app.py`: The security middleware (API).
-- `dashboard.py`: The visualization interface.
-- `attacker.py`: The attack simulation tool.
-- `zkp_simulation.py`: A simple demo of Zero Knowledge Proofs.
+### Core Files
+- `config.py`: Configuration settings (thresholds, paths)
+- `generate_data.py`: Creates synthetic training data
+- `train_model.py`: Trains the Isolation Forest model
+- `app.py`: The security middleware (FastAPI backend)
+- `attacker.py`: The attack simulation tool
+- `zkp_simulation.py`: A simple demo of Zero Knowledge Proofs
+- `start_system.bat`: Automated system launcher
+
+### Frontend (static/)
+- `portal/`: Government portal simulation
+- `hacker/`: Hacker console interface
+- `dashboard/`: Real-time security monitoring dashboard (HTML/JS/Chart.js)

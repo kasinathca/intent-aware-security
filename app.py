@@ -7,9 +7,7 @@ import numpy as np
 import config
 import os
 import time
-
-# Initialize FastAPI
-app = FastAPI(title="Intent-Aware Security Gateway", version="1.0")
+from contextlib import asynccontextmanager
 
 # Global variables for model and stats
 model = None
@@ -21,9 +19,10 @@ stats = {
 # Store last 50 logs for live dashboard
 recent_logs = deque(maxlen=50)
 
-# Load Model on Startup
-@app.on_event("startup")
-def load_model():
+# Modern FastAPI Lifespan Management
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     global model
     model_path = os.path.join(config.DATA_DIR, config.MODEL_FILE)
     if os.path.exists(model_path):
@@ -31,6 +30,30 @@ def load_model():
         print(f"[+] Model loaded from {model_path}")
     else:
         print(f"[!] Warning: Model not found at {model_path}. Run train_model.py first.")
+    yield
+    # Shutdown (cleanup if needed)
+    print("[*] Shutting down API Gateway...")
+
+# Initialize FastAPI with lifespan
+app = FastAPI(title="Intent-Aware Security Gateway", version="1.0", lifespan=lifespan)
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+# Add CORS middleware for dashboard robustness
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount Static Files
+app.mount("/portal", StaticFiles(directory="static/portal"), name="portal")
+app.mount("/hacker", StaticFiles(directory="static/hacker"), name="hacker")
+app.mount("/dashboard", StaticFiles(directory="static/dashboard", html=True), name="dashboard")
 
 # Request Model
 class TrafficLog(BaseModel):

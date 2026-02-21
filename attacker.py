@@ -2,7 +2,6 @@ import requests
 import time
 import random
 import sys
-import threading
 import os
 
 # ANSI Colors for Hacker Aesthetic
@@ -22,7 +21,7 @@ def print_header():
     clear_screen()
     print(f"{RED}{BOLD}")
     print("========================================")
-    print("      🔴 ATTACKER CONSOLE v2.0          ")
+    print("      [!] ATTACKER CONSOLE v2.0         ")
     print("      Target: Government API Gateway    ")
     print("========================================")
     print(f"{RESET}")
@@ -36,11 +35,11 @@ def send_request(payload, quiet=False):
         
         if response.status_code == 200:
             if not quiet:
-                print(f"{GREEN}[✓] 200 OK | PASSED | Risk: {risk:.2f} | Payload: {payload['payload_size_kb']}KB{RESET}")
+                print(f"{GREEN}[OK] 200 OK | PASSED | Risk: {risk:.2f} | Payload: {payload['payload_size_kb']}KB{RESET}")
             return "PASSED"
         elif response.status_code == 403:
             if not quiet:
-                print(f"{RED}[X] 403 BLOCKED | Risk: {response.json()['detail']['risk_score']:.2f} | Reason: Anomaly Detected{RESET}")
+                print(f"{RED}[BLOCKED] 403 FORBIDDEN | Risk: {response.json()['detail']['risk_score']:.2f} | Reason: Anomaly Detected{RESET}")
             return "BLOCKED"
     except Exception as e:
         print(f"{YELLOW}[!] Connection Error (Is app.py running?){RESET}")
@@ -62,7 +61,7 @@ def normal_behavior():
         }
         send_request(payload)
         time.sleep(0.8)
-    print(f"\n{GREEN}[✓] Normal Simulation Complete.{RESET}")
+    print(f"\n{GREEN}[OK] Normal Simulation Complete.{RESET}")
 
 def brute_force_attack():
     print(f"\n{YELLOW}--- SCENARIO 2: BRUTE FORCE ATTACK ---{RESET}")
