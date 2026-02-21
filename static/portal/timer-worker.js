@@ -8,9 +8,11 @@ self.onmessage = function (e) {
     if (action === 'setTimeout') {
         const timerId = timerIdCounter++;
         timers[timerId] = setTimeout(() => {
-            self.postMessage({ type: 'timeout', id: timerId });
+            // Post back the original caller's requestId (id), not the internal timerId
+            self.postMessage({ type: 'timeout', id: id });
             delete timers[timerId];
         }, delay);
+        // Also send the internal timerId so the caller can cancel it
         self.postMessage({ type: 'timerId', requestId: id, timerId: timerId });
     } else if (action === 'clearTimeout') {
         if (timers[id]) {

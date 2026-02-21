@@ -165,13 +165,13 @@ function initCharts() {
                     legend: { display: false },
                     tooltip: { intersect: false, mode: 'index' },
                     zoom: {
+                        limits: {
+                            x: { min: 0 },   // Never show negative x (time index)
+                            y: { min: 0 }    // Never show negative request counts
+                        },
                         zoom: {
-                            wheel: {
-                                enabled: true,
-                            },
-                            pinch: {
-                                enabled: true
-                            },
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
                             mode: 'xy',
                         },
                         pan: {
@@ -216,6 +216,7 @@ function initCharts() {
                         type: 'linear',
                         title: { display: true, text: 'Payload (KB)' },
                         beginAtZero: true,
+                        min: 0,              // Payload can never be negative
                         suggestedMax: 100
                     }
                 },
@@ -230,13 +231,12 @@ function initCharts() {
                     },
                     legend: { display: false },
                     zoom: {
+                        limits: {
+                            y: { min: 0 }    // Payload (KB) can never be negative
+                        },
                         zoom: {
-                            wheel: {
-                                enabled: true,
-                            },
-                            pinch: {
-                                enabled: true
-                            },
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
                             mode: 'xy',
                         },
                         pan: {
@@ -289,7 +289,12 @@ function initCharts() {
         });
 
     } catch (e) {
-
+        console.error('[Chart Init Error]', e);
+        const statusBox = document.getElementById('system-status-box');
+        if (statusBox) {
+            statusBox.className = 'status-critical';
+            statusBox.innerHTML = `<b>Chart Initialization Error: ${e.message}</b>`;
+        }
     }
 }
 
@@ -449,7 +454,7 @@ function updateCharts(logs) {
 
     trafficChart.data.labels = labels;
     trafficChart.data.datasets[0].data = dataRate;
-    trafficChart.update(); // Using 'none' mode in options via animation:0 settings
+    trafficChart.update('none'); // No animation for smooth real-time updates
 
     // 2. Scatter Data
     // Map logs to {x: score, y: payload, status: status}

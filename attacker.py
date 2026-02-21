@@ -39,7 +39,8 @@ def send_request(payload, quiet=False):
             return "PASSED"
         elif response.status_code == 403:
             if not quiet:
-                print(f"{RED}[BLOCKED] 403 FORBIDDEN | Risk: {response.json()['detail']['risk_score']:.2f} | Reason: Anomaly Detected{RESET}")
+                risk_blocked = response.json().get('detail', {}).get('risk_score', -1.0)
+                print(f"{RED}[BLOCKED] 403 FORBIDDEN | Risk: {risk_blocked:.2f} | Reason: Anomaly Detected{RESET}")
             return "BLOCKED"
     except Exception as e:
         print(f"{YELLOW}[!] Connection Error (Is app.py running?){RESET}")
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     # check connectivity first
     try:
         requests.get("http://127.0.0.1:8000")
-    except:
+    except requests.exceptions.ConnectionError:
         print(f"{RED}[!] ERROR: Cannot connect to API Gateway.")
         print(f"    Please run 'python app.py' in a separate terminal first.{RESET}")
         sys.exit()

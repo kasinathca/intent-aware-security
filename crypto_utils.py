@@ -9,6 +9,7 @@ from cryptography.hazmat.backends import default_backend
 import secrets
 import hashlib
 import time
+import threading
 
 # Schnorr Protocol Parameters
 CURVE = ec.SECP256R1()  # NIST P-256 curve
@@ -90,7 +91,7 @@ def verify_signature(public_key, challenge: bytes, signature: bytes) -> bool:
                 r = int.from_bytes(signature[:32], 'big')
                 s = int.from_bytes(signature[32:], 'big')
                 der_signature = encode_dss_signature(r, s)
-                
+
                 public_key.verify(
                     der_signature,
                     challenge,
@@ -106,53 +107,58 @@ class ChallengeStore:
     Thread-safe storage for active challenges with automatic expiry.
     Prevents replay attacks by ensuring challenges are used only once.
     """
-    
+
     def __init__(self, expiry_seconds=60):
         self.challenges = {}
         self.expiry_seconds = expiry_seconds
+        self._lock = threading.Lock()
     
     def create_challenge(self, user_id: str) -> bytes:
         """Create and store new challenge for user"""
         challenge = generate_challenge()
-        self.challenges[user_id] = {
-            'challenge': challenge,
-            'expires_at': time.time() + self.expiry_seconds,
-            'used': False
-        }
+        with self._lock:
+            self.challenges[user_id] = {
+                'challenge': challenge,
+                'expires_at': time.time() + self.expiry_seconds,
+                'used': False
+            }
         return challenge
     
     def get_challenge(self, user_id: str) -> bytes:
         """Retrieve challenge for user (if valid and unused)"""
-        if user_id not in self.challenges:
-            return None
-        
-        entry = self.challenges[user_id]
-        
-        # Check expiry
-        if time.time() > entry['expires_at']:
-            del self.challenges[user_id]
-            return None
-        
-        # Check if already used (prevent replay)
-        if entry['used']:
-            return None
-        
-        return entry['challenge']
+        with self._lock:
+            if user_id not in self.challenges:
+                return None
+
+            entry = self.challenges[user_id]
+
+            # Check expiry
+            if time.time() > entry['expires_at']:
+                del self.challenges[user_id]
+                return None
+
+            # Check if already used (prevent replay)
+            if entry['used']:
+                return None
+
+            return entry['challenge']
     
     def mark_used(self, user_id: str):
         """Mark challenge as used (prevents replay attacks)"""
-        if user_id in self.challenges:
-            self.challenges[user_id]['used'] = True
+        with self._lock:
+            if user_id in self.challenges:
+                self.challenges[user_id]['used'] = True
     
     def cleanup_expired(self):
         """Remove expired challenges (call periodically)"""
         current_time = time.time()
-        expired = [
-            uid for uid, entry in self.challenges.items()
-            if current_time > entry['expires_at']
-        ]
-        for uid in expired:
-            del self.challenges[uid]
+        with self._lock:
+            expired = [
+                uid for uid, entry in self.challenges.items()
+                if current_time > entry['expires_at']
+            ]
+            for uid in expired:
+                del self.challenges[uid]
 
 # Global challenge store instance
 challenge_store = ChallengeStore(expiry_seconds=60)

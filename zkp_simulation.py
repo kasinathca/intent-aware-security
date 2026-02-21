@@ -1,3 +1,14 @@
+"""
+ZKP Age Proof Simulation — CONCEPTUAL DEMONSTRATION ONLY
+
+This script illustrates the *idea* of a Zero-Knowledge Proof for age verification
+(proving you are over 18 without revealing your exact date of birth).
+
+IMPORTANT: This is NOT real ZKP cryptography. It uses a simple hash commitment
+for illustration purposes. The actual cryptographic ZKP implementation used by
+the security gateway is in crypto_utils.py (ECDSA on P-256 curve).
+"""
+
 import hashlib
 import time
 

@@ -486,11 +486,11 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:8000';
+        const API_BASE = ''; // Use relative paths — works on any host/port
 
         async function sendLegitimateRequest() {
             alert('Please use the Government Portal (http://localhost:8000/portal/index.html) to send a legitimate ZKP-enabled request.\n\nThe portal automatically generates cryptographic proofs for all requests.');
-            window.open('http://localhost:8000/portal/index.html', '_blank');
+            window.open('/portal/index.html', '_blank');
         }
 
         async function sendAttackRequest() {
@@ -512,7 +512,7 @@
                 alert(`Attack Result:\n\nStatus: ${response.status}\n\n${JSON.stringify(result, null, 2)}\n\n✗ BLOCKED - No ZKP proof provided!`);
 
                 // Open dashboard to show it wasn't logged
-                window.open('http://localhost:8000/dashboard/index.html', '_blank');
+                window.open('/dashboard/index.html', '_blank');
             } catch (error) {
                 alert(`Error: ${error.message}\n\nMake sure the backend is running (python app.py)`);
             }
@@ -537,7 +537,7 @@
                 alert(`Legacy Attack Result:\n\nStatus: ${response.status}\n\n${JSON.stringify(result, null, 2)}\n\n⚠️ ALLOWED - This shows why ZKP is critical!\n\nML alone cannot distinguish this attack from legitimate traffic.`);
 
                 // Open dashboard
-                window.open('http://localhost:8000/dashboard/index.html', '_blank');
+                window.open('/dashboard/index.html', '_blank');
             } catch (error) {
                 alert(`Error: ${error.message}\n\nMake sure the backend is running (python app.py)`);
             }

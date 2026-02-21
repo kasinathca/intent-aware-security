@@ -294,16 +294,17 @@
             timerWorker = new Worker('timer-worker.js');
             timerWorker.onmessage = function (e) {
                 if (e.data.type === 'timeout') {
-                    const callback = workerTimers[e.data.id];
-                    if (callback) {
-                        callback();
+                    // e.data.id is the original requestId (caller's ID)
+                    const entry = workerTimers[e.data.id];
+                    if (entry) {
+                        entry.callback();
                         delete workerTimers[e.data.id];
                     }
                 } else if (e.data.type === 'timerId') {
-                    // Store the worker timer ID for potential clearing
-                    const reqData = workerTimers[e.data.requestId];
-                    if (reqData) {
-                        reqData.workerId = e.data.timerId;
+                    // Store the worker's internal timer ID so we can cancel it
+                    const entry = workerTimers[e.data.requestId];
+                    if (entry) {
+                        entry.workerId = e.data.timerId;
                     }
                 }
             };
@@ -315,7 +316,8 @@
         function setTimeoutSafe(callback, delay) {
             if (timerWorker) {
                 const requestId = workerRequestId++;
-                workerTimers[requestId] = callback;
+                // Store as object so workerId can be set when worker responds
+                workerTimers[requestId] = { callback: callback, workerId: undefined };
                 timerWorker.postMessage({ action: 'setTimeout', id: requestId, delay: delay });
                 return requestId;
             } else {
@@ -325,9 +327,9 @@
 
         function clearTimeoutSafe(id) {
             if (timerWorker && workerTimers[id]) {
-                const workerData = workerTimers[id];
-                if (workerData.workerId !== undefined) {
-                    timerWorker.postMessage({ action: 'clearTimeout', id: workerData.workerId });
+                const entry = workerTimers[id];
+                if (entry.workerId !== undefined) {
+                    timerWorker.postMessage({ action: 'clearTimeout', id: entry.workerId });
                 }
                 delete workerTimers[id];
             } else {
@@ -364,7 +366,7 @@
                 if (success) {
                     addLog('[ZKP] Authentication ready - All requests will be cryptographically signed');
                 } else {
-                    addLog('[ZKP] Warning: Authentication initialization failed - Falling back to legacy mode', 'warn');
+                    addLog('[ZKP] Warning: Authentication initialization failed - Falling back to legacy mode', 'error');
                     zkpEnabled = false;
                 }
             } catch (error) {

@@ -430,7 +430,9 @@ Available Commands:
         }
 
         function simulateNmap() {
-            printOutput("Starting Nmap 7.94 ( https://nmap.org ) at 2025-02-17 11:30 IST");
+            const now = new Date();
+            const scanTimestamp = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false }).replace(',', '') + ' IST';
+            printOutput(`Starting Nmap 7.94 ( https://nmap.org ) at ${scanTimestamp}`);
             setTimeout(() => printOutput("Nmap scan report for 192.168.1.105"), 500);
             setTimeout(() => printOutput("Host is up (0.00023s latency)."), 700);
             setTimeout(() => printOutput(`
@@ -518,6 +520,14 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
 
             await sleep(500);
 
+            // Fetch current security config to know if ZKP is active
+            let zkpEnabled = true;
+            try {
+                const cfgRes = await fetch('/security/config');
+                const cfg = await cfgRes.json();
+                zkpEnabled = cfg.zkp_enabled;
+            } catch (_) { /* assume enabled if unreachable */ }
+
             // Phase 1: Reconnaissance
             printOutput(`<span class="success">[PHASE 1] RECONNAISSANCE</span>`, "");
             await sleep(300);
@@ -560,7 +570,7 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
             printOutput(`  [+] Matching endpoint: /verify_license <span class="success">✓</span>`, "success");
             await sleep(500);
 
-            // Phase 4: Attack Summary
+            // Phase 4: Attack Summary — ZKP row changes based on current config
             printOutput(`\n<span class="system-msg">[*] ATTACK PROFILE SUMMARY</span>`, "");
             printOutput(`  ┌─────────────────────────────────────────────┐`, "output");
             printOutput(`  │ <span class="success">✓</span> Valid Credentials (STOLEN)          │`, "output");
@@ -569,12 +579,23 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
             printOutput(`  │ <span class="success">✓</span> Normal Access Pattern (MIMICKED)    │`, "output");
             printOutput(`  │ <span class="success">✓</span> Correct Timing (COPIED)             │`, "output");
             printOutput(`  │ <span class="success">✓</span> Legitimate Payload Size (MATCHED)   │`, "output");
-            printOutput(`  │ <span class="error">✗</span> ZKP Cryptographic Proof (MISSING)   │`, "output");
+            if (zkpEnabled) {
+                printOutput(`  │ <span class="error">✗</span> ZKP Cryptographic Proof (MISSING)   │`, "output");
+            } else {
+                printOutput(`  │ <span class="success">✓</span> ZKP Layer (DISABLED — NO BARRIER)   │`, "output");
+            }
             printOutput(`  └─────────────────────────────────────────────┘`, "output");
             await sleep(800);
 
-            printOutput(`\n<span class="system-msg">[*] Traditional ML-based security would see this as NORMAL traffic</span>`, "");
-            printOutput(`<span class="system-msg">[*] But ZKP requires cryptographic proof...</span>\n`, "");
+            // Pre-attack commentary — different depending on ZKP state
+            if (zkpEnabled) {
+                printOutput(`\n<span class="system-msg">[*] Traditional ML-based security would see this as NORMAL traffic</span>`, "");
+                printOutput(`<span class="system-msg">[*] But ZKP requires cryptographic proof...</span>\n`, "");
+            } else {
+                printOutput(`\n<span class="system-msg">[*] Traditional ML-based security would see this as NORMAL traffic</span>`, "");
+                printOutput(`<span class="success">[*] ZKP layer is DISABLED — no cryptographic barrier in place</span>`, "");
+                printOutput(`<span class="success">[*] ML model has NO way to distinguish this from a legitimate request</span>\n`, "");
+            }
             await sleep(1000);
 
             // Phase 5: Launch Attack
@@ -587,7 +608,7 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
 
             // Make actual API call
             try {
-                const response = await fetch('http://localhost:8000/verify_zkp', {
+                const response = await fetch('/verify_zkp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -604,9 +625,34 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
 
                 // Show result
                 if (response.status === 200 && result.status === 'ALLOWED') {
-                    printOutput(`\n  <span class="success">[!] ATTACK SUCCESSFUL - REQUEST ALLOWED</span>`, "");
-                    printOutput(`  <span class="success">[!] Data breach in progress...</span>\n`, "");
+                    // ── ATTACK SUCCEEDED (ZKP was disabled) ──────────────────────────────
+                    printOutput(`\n  <span class="success">[!] ATTACK SUCCESSFUL — REQUEST ALLOWED UNDETECTED</span>`, "");
+                    await sleep(300);
+                    printOutput(`  <span class="success">[!] ML model classified traffic as: NORMAL (risk score: ${result.risk_score?.toFixed(4) ?? 'N/A'})</span>`, "");
+                    await sleep(400);
+                    printOutput(`  <span class="success">[!] Initiating silent data exfiltration...</span>\n`, "");
+                    await sleep(600);
+
+                    printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>`, "");
+                    printOutput(`<span class="success">  WHY THE ATTACK SUCCEEDED:</span>`, "");
+                    printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>`, "");
+                    printOutput(`  With ZKP disabled, the only defence is the ML model.`, "output");
+                    printOutput(`  The ML model analyses:`, "output");
+                    printOutput(`    • Request rate  → 5 req/min  ✓ (normal range)`, "output");
+                    printOutput(`    • Payload size  → 2 KB       ✓ (normal range)`, "output");
+                    printOutput(`    • Geo-location  → India      ✓ (trusted region)`, "output");
+                    printOutput(`    • Time of day   → 14:00      ✓ (business hours)`, "output");
+                    printOutput(`    • Endpoint      → /verify_license ✓ (expected)`, "output");
+                    printOutput(``, "output");
+                    printOutput(`  <span class="success">All behavioural signals look legitimate — ML score: NORMAL</span>`, "");
+                    printOutput(`  <span class="success">The attacker blended in perfectly. No alert was raised.</span>`, "");
+                    printOutput(``, "output");
+                    printOutput(`  <span class="error">⚠  This is exactly why ML alone is insufficient.</span>`, "");
+                    printOutput(`  <span class="error">⚠  Without ZKP, a perfect mimicry attack is UNDETECTABLE.</span>`, "");
+                    printOutput(`  <span class="error">⚠  Enable ZKP on the dashboard to restore cryptographic defence.</span>`, "");
+                    printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>\n`, "");
                 } else {
+                    // ── ATTACK BLOCKED (ZKP was enabled) ─────────────────────────────────
                     printOutput(`\n  <span class="error">[!] ATTACK BLOCKED BY ZKP LAYER</span>`, "");
                     printOutput(`  <span class="error">[!] Reason: ${result.detail?.reason || 'Cryptographic proof required'}</span>`, "");
                     printOutput(`  <span class="error">[!] Layer: ${result.detail?.layer || 'ZKP'}</span>\n`, "");
@@ -631,7 +677,7 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
                     printOutput(`<span class="system-msg">═══════════════════════════════════════════════════</span>\n`, "");
                 }
 
-                // Show response
+                // Show raw server response
                 printOutput(`<span class="output">Server Response:</span>`, "");
                 printOutput(`<span class="output">${JSON.stringify(result, null, 2)}</span>\n`, "");
 
@@ -641,7 +687,7 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
             }
 
             printOutput(`<span class="system-msg">[*] Attack demonstration complete.</span>`, "");
-            printOutput(`<span class="system-msg">[*] Check dashboard at http://localhost:8000/dashboard/</span>\n`, "");
+            printOutput(`<span class="system-msg">[*] Check dashboard at /dashboard/</span>\n`, "");
         }
 
         function sleep(ms) {
