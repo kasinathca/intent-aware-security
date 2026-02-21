@@ -11,6 +11,7 @@ the security gateway is in crypto_utils.py (ECDSA on P-256 curve).
 
 import hashlib
 import time
+import secrets
 
 def hash_data(data):
     return hashlib.sha256(data.encode()).hexdigest()
@@ -24,7 +25,7 @@ def zkp_demo():
     # Step 1: User Input
     print("[1] PROVER (User): Generating Secret...")
     secret_dob = "2000-01-01"
-    secret_salt = "random_salt_123"
+    secret_salt = secrets.token_hex(8)  # Genuinely random salt
     
     # User calculates: H(DOB + Salt)
     commitment = hash_data(secret_dob + secret_salt)

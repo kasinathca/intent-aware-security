@@ -149,11 +149,27 @@ class ZKPClient {
     }
 
     /**
-     * Get challenge from server
+     * Get challenge from server.
+     * If the server has restarted and lost our registration (404),
+     * automatically re-registers the public key and retries once.
      */
     async getChallenge() {
         try {
             const response = await fetch(`${this.apiBaseUrl}/zkp/challenge?user_id=${this.userId}`);
+
+            if (response.status === 404) {
+                // Server restarted — our key is gone from its memory. Re-register and retry.
+                console.warn('[ZKP] Server does not recognise user — re-registering public key...');
+                await this.registerPublicKey();
+
+                // Retry challenge request once after re-registration
+                const retryResponse = await fetch(`${this.apiBaseUrl}/zkp/challenge?user_id=${this.userId}`);
+                if (!retryResponse.ok) {
+                    throw new Error(`Challenge request failed after re-registration: ${retryResponse.statusText}`);
+                }
+                const retryResult = await retryResponse.json();
+                return retryResult.challenge;
+            }
 
             if (!response.ok) {
                 throw new Error(`Challenge request failed: ${response.statusText}`);
@@ -210,7 +226,7 @@ class ZKPClient {
         }
 
         try {
-            // 1. Get challenge from server
+            // 1. Get challenge from server (auto re-registers if server restarted)
             const challenge = await this.getChallenge();
 
             // 2. Sign challenge

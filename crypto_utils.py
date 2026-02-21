@@ -160,9 +160,6 @@ class ChallengeStore:
             for uid in expired:
                 del self.challenges[uid]
 
-# Global challenge store instance
-challenge_store = ChallengeStore(expiry_seconds=60)
-
 def hash_user_id(user_id: str) -> str:
     """Create deterministic hash of user ID for privacy"""
     return hashlib.sha256(user_id.encode()).hexdigest()[:16]

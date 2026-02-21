@@ -466,5 +466,5 @@ function updateCharts(logs) {
     }));
 
     scatterChart.data.datasets[0].data = scatterData;
-    scatterChart.update();
+    scatterChart.update('none'); // No animation for smooth real-time updates
 }

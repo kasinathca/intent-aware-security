@@ -3,6 +3,7 @@ import time
 import random
 import sys
 import os
+import config
 
 # ANSI Colors for Hacker Aesthetic
 GREEN = "\033[92m"
@@ -12,7 +13,7 @@ CYAN = "\033[96m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
-API_URL = "http://127.0.0.1:8000/verify"
+API_URL = config.API_URL + config.VERIFY_ENDPOINT
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -42,8 +43,8 @@ def send_request(payload, quiet=False):
                 risk_blocked = response.json().get('detail', {}).get('risk_score', -1.0)
                 print(f"{RED}[BLOCKED] 403 FORBIDDEN | Risk: {risk_blocked:.2f} | Reason: Anomaly Detected{RESET}")
             return "BLOCKED"
-    except Exception as e:
-        print(f"{YELLOW}[!] Connection Error (Is app.py running?){RESET}")
+    except requests.exceptions.RequestException as e:
+        print(f"{YELLOW}[!] Connection Error: {e} (Is app.py running?){RESET}")
         return "ERROR"
 
 def normal_behavior():
