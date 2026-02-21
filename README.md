@@ -1,7 +1,12 @@
 # Intent-Aware Security for Identity Verification
 ## Group 4 - Introduction to Innovative Projects (PHY1901)
 
-This project prototype demonstrates a machine learning-based "Privacy Wrapper" for identity verification systems like Aadhaar. It detects anomalous behavior (scraping, brute force attacks) based on intent rather than just credentials.
+### About This Project
+The **Intent-Aware Security System** is an advanced API middleware prototype designed to protect legacy identity verification infrastructure (e.g., Aadhaar OTP systems) against modern threat vectors like credential stuffing, automated scraping, and SS7/SIM-swapping. 
+
+Unlike traditional platforms that rely strictly on credential validity, this project introduces a **dual-layer defense architecture**:
+1. **Cryptographic Layer (ZKP):** Utilizes client-side ECDSA P-256 signatures and strict challenge-response nonces to authenticate users mathematically, without transmitting private secrets across the network.
+2. **Behavioral Layer (Machine Learning):** Deploys an unsupervised `IsolationForest` anomaly detection engine to evaluate the *intent* of a request (timing, location, velocity, and payload mass), instantly terminating perfectly-spoofed mimicry attacks where cryptographic keys are bypassed or disabled.
 
 ---
 
