@@ -125,6 +125,7 @@ venv.bak/
 .ropeproject
 *.swp
 *.swo
+.hintrc
 
 # mkdocs documentation
 /site

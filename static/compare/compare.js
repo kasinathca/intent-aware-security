@@ -2,18 +2,29 @@
 let currentScenario = 'a';
 let currentStep = 0;
 let steps = [];
+let isPlaying = false;
+let playInterval = null;
 
 // Live clock
 function updateClocks() {
     const now = new Date();
-    const t = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const el1 = document.getElementById('victim-time');
-    const el2 = document.getElementById('lock-time');
-    if (el1) el1.textContent = t;
-    if (el2) el2.textContent = t;
+    const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    // Update multiple clock elements if they exist
+    const lockTime = document.getElementById('lock-time');
+    const victimTime = document.getElementById('victim-time');
+
+    // Also update date on lock screen
+    const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+    const d = now.toLocaleDateString('en-US', dateOptions);
+    const lockDate = document.getElementById('lock-date');
+
+    if (lockTime) lockTime.textContent = t.replace(' AM', '').replace(' PM', '');
+    if (victimTime) victimTime.textContent = t.replace(' AM', '').replace(' PM', '');
+    if (lockDate) lockDate.textContent = d;
 }
 updateClocks();
-setInterval(updateClocks, 30000);
+setInterval(updateClocks, 10000);
 
 // ── DOM HELPERS ──
 function showVictimState(id) {
@@ -22,15 +33,21 @@ function showVictimState(id) {
     if (el) el.classList.add('visible');
 }
 
-function showRogueState(id) {
-    document.querySelectorAll('.rogue-state').forEach(e => e.classList.remove('visible'));
-    const el = document.getElementById(id);
-    if (el) el.classList.add('visible');
+function showRogueSMS(text) {
+    const el = document.getElementById('att-sms');
+    const txt = document.getElementById('att-sms-text');
+    if (text) {
+        txt.innerHTML = text;
+        el.style.transform = 'translateY(0)';
+    } else {
+        el.style.transform = 'translateY(-150px)';
+    }
 }
 
 function gwLog(html) {
     const log = document.getElementById('gw-log');
-    log.innerHTML += `<span class="gl">${html}</span>`;
+    const time = new Date().toLocaleTimeString('en-GB');
+    log.innerHTML += `<span class="gl"><span style="opacity:0.5">[${time}]</span> ${html}</span>`;
     log.scrollTop = log.scrollHeight;
 }
 
@@ -50,11 +67,6 @@ function laptopLine(html) {
     t.scrollTop = t.scrollHeight;
 }
 
-function attScreen(html) {
-    showRogueState('att-active');
-    document.getElementById('att-screen-text').innerHTML = html.replace(/\n/g, '<br>');
-}
-
 function setStepHighlight(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -64,8 +76,8 @@ function setStepHighlight(id, state) {
 
 function fillOtpDigits(count) {
     const otp = '847291';
-    document.querySelectorAll('#otp-digits .otp-d').forEach((d, i) => {
-        d.classList.remove('filled', 'active-cursor');
+    document.querySelectorAll('#otp-digits .otp-cell').forEach((d, i) => {
+        d.classList.remove('filled');
         if (i < count) {
             d.textContent = otp[i];
             d.classList.add('filled');
@@ -75,33 +87,96 @@ function fillOtpDigits(count) {
     });
 }
 
+function rogueLog(text, cls = '') {
+    const feed = document.getElementById('rogue-feed');
+    const span = document.createElement('span');
+    span.className = 'rogue-feed-line' + (cls ? ' ' + cls : '');
+    span.textContent = text;
+    feed.appendChild(span);
+    // Keep only last 8 lines
+    while (feed.children.length > 8) feed.removeChild(feed.firstChild);
+    feed.scrollTop = feed.scrollHeight;
+}
+
+// ── AUTO PLAY ──
+function togglePlay() {
+    if (isPlaying) {
+        stopPlay();
+    } else {
+        startPlay();
+    }
+}
+
+function startPlay() {
+    if (currentStep >= steps.length) {
+        resetSim();
+    }
+    isPlaying = true;
+    document.getElementById('play-btn').innerHTML = '<span class="material-symbols-outlined">pause</span> Pause';
+    document.getElementById('play-btn').classList.add('active');
+
+    if (currentStep === 0) goNext();
+
+    // Variable timing could be implemented here, but fixed for now
+    playInterval = setInterval(() => {
+        if (currentStep < steps.length) {
+            goNext();
+        } else {
+            stopPlay();
+        }
+    }, 3000);
+}
+
+function stopPlay() {
+    isPlaying = false;
+    clearInterval(playInterval);
+    document.getElementById('play-btn').innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Auto Play';
+    document.getElementById('play-btn').classList.remove('active');
+}
+
 // ── FULL RESET ──
 function resetSim() {
+    stopPlay();
     currentStep = 0;
+
     showVictimState('v-lock');
     document.getElementById('uid-display').textContent = '_ _ _ _\u00a0\u00a0_ _ _ _\u00a0\u00a0_ _ _ _';
+
+    // Hide all dynamic cards
     document.getElementById('otp-card').style.display = 'none';
     document.getElementById('zkp-card').style.display = 'none';
     document.getElementById('v-status-wrap').style.display = 'none';
     document.getElementById('v-action-btn').style.display = 'none';
-    document.getElementById('sms-notif').classList.remove('slide-in');
+
+    document.getElementById('sms-notif').style.transform = 'translateY(-150%)';
+
+    // Reset ZKP visuals
     document.getElementById('zkp-ring').className = 'zkp-ring';
-    document.getElementById('zkp-check').className = 'zkp-check';
-    document.getElementById('zkp-label').innerHTML = 'Signing with device key\u2026<br><span style="font-size:.55rem;color:#aaa;">ECDSA P-256</span>';
+    document.getElementById('zkp-check').style.opacity = '0';
+    document.getElementById('zkp-label').innerHTML = 'Signing with Secure Enclave...';
+
     fillOtpDigits(0);
-    document.getElementById('gw-log').innerHTML = '<span class="gl gl-info"># Gateway ready</span>';
-    gwStatus('Waiting...', 'gw-neutral');
-    gwIcon('\u23f3');
+
+    // Reset Gateway
+    document.getElementById('gw-log').innerHTML = '<span class="gl gl-info"># Gateway Initialized v2.4.0</span>';
+    gwStatus('IDLE', 'gw-neutral');
+    gwIcon('🛡️');
+
+    // Reset Laptop
     document.getElementById('laptop-term').innerHTML =
         '<span class="lt-line lt-dim"># SIM swap toolkit v3.1</span>' +
-        '<span class="lt-line lt-prompt">root@kali:~# <span style="color:#c9d1d9;">_</span></span>';
-    document.getElementById('att-sms').classList.remove('slide-in');
-    showRogueState('att-idle');
-    document.getElementById('att-screen-text').textContent = '';
+        '<span class="lt-line lt-prompt">root@kali:~# <span class="lt-cursor">_</span></span>';
+    showRogueSMS(null);
+    document.getElementById('rogue-feed').innerHTML =
+        '<span class="rogue-feed-line dim">$ ss7_monitor --iface gsm0</span>' +
+        '<span class="rogue-feed-line dim">Listening on GSM channels...</span>';
+
+    // Reset Highlights
     ['bad-s1', 'bad-s2', 'bad-s3', 'bad-s4', 'good-s1', 'good-s2', 'good-s3', 'good-s4']
         .forEach(id => setStepHighlight(id, null));
     document.getElementById('result-bad').classList.remove('show');
     document.getElementById('result-good').classList.remove('show');
+
     updateNav();
 }
 
@@ -111,16 +186,19 @@ function updateNav() {
     const nextBtn = document.getElementById('next-btn');
     const counter = document.getElementById('step-counter');
     const desc = document.getElementById('step-desc');
+    const progressFill = document.getElementById('progress-fill');
 
     prevBtn.disabled = currentStep === 0;
     nextBtn.disabled = currentStep >= steps.length;
-    nextBtn.textContent = currentStep >= steps.length ? '\u2713 Done' : 'Next \u203a';
+
+    const progress = (currentStep / steps.length) * 100;
+    progressFill.style.width = `${progress}%`;
 
     if (currentStep === 0) {
-        counter.textContent = `Step 0 / ${steps.length}`;
-        desc.textContent = 'Press Next to begin the simulation';
+        counter.textContent = `START`;
+        desc.textContent = 'Scenario Ready: Click Next to Begin';
     } else {
-        counter.textContent = `Step ${currentStep} / ${steps.length}`;
+        counter.textContent = `STEP ${currentStep} / ${steps.length}`;
         desc.textContent = steps[currentStep - 1].label;
     }
 }
@@ -143,296 +221,337 @@ function selectScenario(s) {
     currentScenario = s;
     document.getElementById('btn-a').classList.toggle('active', s === 'a');
     document.getElementById('btn-b').classList.toggle('active', s === 'b');
-    document.getElementById('scen-label').textContent = s === 'a'
-        ? 'Current Aadhaar OTP authentication \u2014 attacker wins'
-        : 'Proposed ZKP system \u2014 attacker blocked';
+
+    const label = document.getElementById('scen-label');
     const badge = document.getElementById('sim-badge');
-    badge.className = 'scenario-badge ' + (s === 'a' ? 'badge-a' : 'badge-b');
-    badge.textContent = s === 'a'
-        ? 'Scenario A \u2014 OTP System: Attacker Wins'
-        : 'Scenario B \u2014 ZKP System: Attacker Blocked';
+
+    if (s === 'a') {
+        label.textContent = 'Current Aadhaar OTP authentication — attacker wins';
+        badge.className = 'scenario-badge badge-a';
+        badge.textContent = 'Scenario A — OTP System: Attacker Wins';
+    } else {
+        label.textContent = 'Proposed ZKP system — attacker blocked';
+        badge.className = 'scenario-badge badge-b';
+        badge.textContent = 'Scenario B — ZKP System: Attacker Blocked';
+    }
+
     steps = s === 'a' ? buildStepsA() : buildStepsB();
     resetSim();
 }
 
-// ══ SCENARIO A STEPS ══
+// ══ SCENARIO A: DETAILED STEPS ══
 function buildStepsA() {
     return [
         {
-            label: 'Attacker initiates SS7 redirect attack',
+            label: 'Attacker compromises the victim credentials',
             apply() {
-                laptopLine('<span class="lt-info">[*] Initiating SS7 redirect attack...</span>');
-                laptopLine('<span class="lt-warn">[*] Target: +91-98XXXXXX12 (Jio)</span>');
+                laptopLine('<span class="lt-info">[*] Leaked DB found: "Aadhaar_Dump_2024.sql"</span>');
+                laptopLine('<span class="lt-ok">[+] Extracted UID: 7412 5896 3021</span>');
+                laptopLine('<span class="lt-ok">[+] Extracted Phone: +91-9876543212</span>');
             },
-            undo() {
-                document.getElementById('laptop-term').innerHTML =
-                    '<span class="lt-line lt-dim"># SIM swap toolkit v3.1</span>' +
-                    '<span class="lt-line lt-prompt">root@kali:~# <span style="color:#c9d1d9;">_</span></span>';
-            }
+            undo() { resetSim(); }
         },
         {
-            label: 'SIM swap confirmed — attacker\'s Airtel SIM now receives victim\'s calls & SMS',
+            label: 'Attacker initiates SS7/SIM Swap attack',
             apply() {
-                laptopLine('<span class="lt-ok">[+] SIM swap confirmed \u2014 Airtel rogue SIM active</span>');
-                attScreen('SIM SWAP ACTIVE\n\nTarget routed to\nrogue Airtel SIM\n\nAwaiting OTP...');
+                laptopLine('<span class="lt-warn">[*] Initializing SS7 attack on carrier...</span>');
+                laptopLine('<span class="lt-warn">[*] Sending MAP_UPDATE_LOCATION packet...</span>');
+                document.getElementById('att-carrier').textContent = 'Searching...';
+                rogueLog('Sending MAP_SEND_ROUTING_INFO...', 'warn');
+                rogueLog('Target: +91-9876543212', 'dim');
             },
             undo() {
-                showRogueState('att-idle');
                 const t = document.getElementById('laptop-term');
-                t.removeChild(t.lastChild);
+                t.removeChild(t.lastChild); t.removeChild(t.lastChild);
+                document.getElementById('att-carrier').textContent = 'No Service';
             }
         },
         {
-            label: 'Victim opens mAadhaar app and enters Aadhaar number',
+            label: 'Network fooled: Traffic redirected to rogue SIM',
+            apply() {
+                laptopLine('<span class="lt-ok">[+] HLR Update Successful!</span>');
+                laptopLine('<span class="lt-ok">[+] Target number mapped to IMSI: 4042011... (Rogue SIM)</span>');
+                document.getElementById('att-carrier').textContent = 'Jio 5G (Rogue)';
+                rogueLog('HLR response: IMSI redirect OK', 'ok');
+                rogueLog('Rogue SIM registered on network', 'ok');
+                rogueLog('Monitoring +91-9876543212 traffic...', 'dim');
+            },
+            undo() {
+                const t = document.getElementById('laptop-term');
+                t.removeChild(t.lastChild); t.removeChild(t.lastChild);
+                document.getElementById('att-carrier').textContent = 'Searching...';
+            }
+        },
+        {
+            label: 'Victim unlocks phone to access service',
             apply() {
                 showVictimState('v-app');
                 setStepHighlight('bad-s1', 'active');
-                document.getElementById('uid-display').textContent = '7412  5896  3021';
             },
             undo() {
                 showVictimState('v-lock');
                 setStepHighlight('bad-s1', null);
-                document.getElementById('uid-display').textContent = '_ _ _ _\u00a0\u00a0_ _ _ _\u00a0\u00a0_ _ _ _';
             }
         },
         {
-            label: 'Server sends OTP via SMS to registered mobile number',
+            label: 'Victim enters Aadhaar Number in App',
+            apply() {
+                document.getElementById('uid-display').textContent = '7412  5896  3021';
+                gwStatus('Processing Request...', 'gw-wait');
+                gwLog('Incoming Auth Request: UID 7412-xxx-3021');
+            },
+            undo() {
+                document.getElementById('uid-display').textContent = '_ _ _ _  _ _ _ _  _ _ _ _';
+                gwStatus('IDLE', 'gw-neutral');
+            }
+        },
+        {
+            label: 'Gateway sends OTP via SMS',
             apply() {
                 setStepHighlight('bad-s1', 'done');
                 setStepHighlight('bad-s2', 'active');
-                gwLog('<span class="gl-info">[22:07:15] UID: 7412-5896-3021</span>');
-                gwLog('<span class="gl-info">[22:07:15] OTP dispatched via SMS</span>');
-                gwStatus('OTP Sent', 'gw-wait');
-                gwIcon('\ud83d\udce8');
-                document.getElementById('otp-card').style.display = 'block';
+                gwLog('Authentication Policy: OTP (Legacy)');
+                gwLog('Generating 6-digit OTP...');
+                gwLog('<span class="lt-info">>> SMS Dispatched to +91-98xxxxxx12</span>');
+                gwStatus('OTP SENT', 'gw-wait');
+                gwIcon('📨');
+                // Show SMS banner on victim phone first
+                document.getElementById('sms-notif').style.transform = 'translateY(0)';
+                // After victim reads SMS, OTP card slides in
+                setTimeout(() => {
+                    document.getElementById('otp-card').style.display = 'block';
+                    // Auto-dismiss the notification banner
+                    setTimeout(() => {
+                        document.getElementById('sms-notif').style.transform = 'translateY(-150%)';
+                    }, 2000);
+                }, 1500);
             },
             undo() {
                 setStepHighlight('bad-s1', 'active');
                 setStepHighlight('bad-s2', null);
                 document.getElementById('otp-card').style.display = 'none';
-                document.getElementById('gw-log').innerHTML = '<span class="gl gl-info"># Gateway ready</span>';
-                gwStatus('Waiting...', 'gw-neutral');
-                gwIcon('\u23f3');
+                document.getElementById('sms-notif').style.transform = 'translateY(-150%)';
+                gwStatus('Processing Request...', 'gw-wait');
             }
         },
         {
-            label: 'Attacker\'s rogue SIM intercepts the OTP — victim never sees it',
+            label: 'Network routes SMS to Attacker (SIM Swap)',
             apply() {
                 setStepHighlight('bad-s2', 'done');
                 setStepHighlight('bad-s3', 'active');
-                laptopLine('<span class="lt-ok">[+] SMS intercepted from UIDAI!</span>');
-                laptopLine('<span class="lt-ok">[+] OTP extracted: 847291</span>');
-                document.getElementById('att-sms').classList.add('slide-in');
-                attScreen('OTP CAPTURED!\n\nFrom: UIDAI-OTP\nCode: 847291\nValid: 10 min\n\nAuto-submitting...');
+                laptopLine('<span class="lt-warn">[!] Incoming SMS on GSM Channel 3...</span>');
+                laptopLine('<span class="lt-ok">[+] SMS DECODED: "Your Aadhaar OTP is 847291"</span>');
+                rogueLog('── INCOMING SMS ──', 'warn');
+                rogueLog('From: UIDAI-OTP', 'dim');
+                rogueLog('Msg: OTP is 847291', 'ok');
+                showRogueSMS('OTP: 847291');
             },
             undo() {
                 setStepHighlight('bad-s2', 'active');
                 setStepHighlight('bad-s3', null);
-                document.getElementById('att-sms').classList.remove('slide-in');
-                attScreen('SIM SWAP ACTIVE\n\nTarget routed to\nrogue Airtel SIM\n\nAwaiting OTP...');
+                showRogueSMS(null);
                 const t = document.getElementById('laptop-term');
-                t.removeChild(t.lastChild);
-                t.removeChild(t.lastChild);
+                t.removeChild(t.lastChild); t.removeChild(t.lastChild);
             }
         },
         {
-            label: 'OTP also arrives on victim\'s phone (but attacker already has it)',
+            label: 'Attacker inputs stolen OTP',
             apply() {
-                document.getElementById('sms-notif').classList.add('slide-in');
+                // Simulate typing
+                fillOtpDigits(6);
+                laptopLine('<span class="lt-info">[*] Auto-submitting OTP to Gateway...</span>');
+                gwLog('Received OTP: 847291');
             },
             undo() {
-                document.getElementById('sms-notif').classList.remove('slide-in');
+                fillOtpDigits(0);
+                const t = document.getElementById('laptop-term');
+                t.removeChild(t.lastChild);
             }
         },
         {
-            label: 'Attacker submits OTP — server has no way to distinguish attacker from victim',
+            label: 'Gateway validates OTP (Cannot detect swap)',
             apply() {
                 setStepHighlight('bad-s3', 'done');
                 setStepHighlight('bad-s4', 'active');
-                fillOtpDigits(6);
-                gwLog('<span class="gl-ok">[22:07:17] OTP VALID \u2713</span>');
-                gwLog('<span class="gl-warn">[22:07:17] No anomaly detected</span>');
-                gwStatus('OTP Valid \u2713', 'gw-ok');
-                gwIcon('\u2705');
+                gwLog('<span class="lt-ok">OTP MATCH CONFIRMED</span>');
+                gwStatus('ACCESS GRANTED', 'gw-ok');
+                gwIcon('✅');
             },
             undo() {
                 setStepHighlight('bad-s3', 'active');
                 setStepHighlight('bad-s4', null);
-                fillOtpDigits(0);
-                const log = document.getElementById('gw-log');
-                log.removeChild(log.lastChild);
-                log.removeChild(log.lastChild);
-                gwStatus('OTP Sent', 'gw-wait');
-                gwIcon('\ud83d\udce8');
+                gwStatus('OTP SENT', 'gw-wait');
+                gwIcon('📨');
             }
         },
         {
-            label: '🔓 ATTACKER AUTHENTICATED — Full access to victim\'s Aadhaar profile',
+            label: '🔓 BREACH SUCCESSFUL: Attacker logged in',
             apply() {
                 setStepHighlight('bad-s4', 'done');
-                const pill = document.getElementById('v-status-pill');
-                pill.className = 'status-pill pill-ok';
-                pill.textContent = '\u2713 Authenticated';
                 document.getElementById('v-status-wrap').style.display = 'block';
-                const btn = document.getElementById('v-action-btn');
-                btn.className = 'app-action-btn btn-green';
-                btn.textContent = 'Access Granted \u2014 View Aadhaar';
-                btn.style.display = 'block';
+                document.getElementById('v-action-btn').style.display = 'block';
                 document.getElementById('result-bad').classList.add('show');
+                laptopLine('<span class="lt-ok">[SUCCESS] Auth Token Received! Dumping user data...</span>');
             },
             undo() {
                 setStepHighlight('bad-s4', 'active');
                 document.getElementById('v-status-wrap').style.display = 'none';
                 document.getElementById('v-action-btn').style.display = 'none';
                 document.getElementById('result-bad').classList.remove('show');
+                const t = document.getElementById('laptop-term');
+                t.removeChild(t.lastChild);
             }
         }
     ];
 }
 
-// ══ SCENARIO B STEPS ══
+// ══ SCENARIO B: DETAILED STEPS ══
 function buildStepsB() {
     return [
         {
-            label: 'Attacker initiates SS7 redirect attack (same as before)',
+            label: 'Attacker performs steps 1-3 (Leak, SS7 Attack)',
             apply() {
-                laptopLine('<span class="lt-info">[*] Initiating SS7 redirect attack...</span>');
-                laptopLine('<span class="lt-warn">[*] Target: +91-98XXXXXX12 (Jio)</span>');
+                laptopLine('<span class="lt-info">[*] Leaked DB found: "Aadhaar_Dump_2024.sql"</span>');
+                laptopLine('<span class="lt-warn">[*] Initializing SS7 attack...</span>');
+                laptopLine('<span class="lt-ok">[+] SIM swap confirmed — Rogue SIM active</span>');
+                document.getElementById('att-carrier').textContent = 'Jio 5G (Rogue)';
             },
-            undo() {
-                document.getElementById('laptop-term').innerHTML =
-                    '<span class="lt-line lt-dim"># SIM swap toolkit v3.1</span>' +
-                    '<span class="lt-line lt-prompt">root@kali:~# <span style="color:#c9d1d9;">_</span></span>';
-            }
+            undo() { resetSim(); }
         },
         {
-            label: 'SIM swap confirmed — attacker is ready to intercept SMS',
-            apply() {
-                laptopLine('<span class="lt-ok">[+] SIM swap confirmed \u2014 Airtel rogue SIM active</span>');
-                attScreen('SIM SWAP ACTIVE\n\nTarget routed to\nrogue Airtel SIM\n\nAwaiting OTP...');
-            },
-            undo() {
-                showRogueState('att-idle');
-                const t = document.getElementById('laptop-term');
-                t.removeChild(t.lastChild);
-            }
-        },
-        {
-            label: 'Victim opens mAadhaar app and enters Aadhaar number',
+            label: 'Victim unlocks phone & opens app',
             apply() {
                 showVictimState('v-app');
                 setStepHighlight('good-s1', 'active');
-                document.getElementById('uid-display').textContent = '7412  5896  3021';
             },
             undo() {
                 showVictimState('v-lock');
                 setStepHighlight('good-s1', null);
-                document.getElementById('uid-display').textContent = '_ _ _ _\u00a0\u00a0_ _ _ _\u00a0\u00a0_ _ _ _';
             }
         },
         {
-            label: 'Server issues a ZKP challenge nonce — NO SMS sent, no OTP channel',
+            label: 'Victim submits Aadhaar Number',
+            apply() {
+                document.getElementById('uid-display').textContent = '7412  5896  3021';
+                gwStatus('Processing Request', 'gw-wait');
+                gwLog('Incoming Auth Request: UID 7412-xxx-3021');
+            },
+            undo() {
+                document.getElementById('uid-display').textContent = '_ _ _ _  _ _ _ _  _ _ _ _';
+                gwStatus('IDLE', 'gw-neutral');
+            }
+        },
+        {
+            label: 'Gateway issues ZKP Challenge (NO SMS)',
             apply() {
                 setStepHighlight('good-s1', 'done');
                 setStepHighlight('good-s2', 'active');
-                gwLog('<span class="gl-info">[22:07:15] UID: 7412-5896-3021</span>');
-                gwLog('<span class="gl-info">[22:07:15] ZKP challenge: a3f9...e72b</span>');
-                gwStatus('Challenge Issued', 'gw-wait');
-                gwIcon('\ud83d\udd10');
+                gwLog('Policy: ZKP-Enhaced (Draft 2026)');
+                gwLog('<span class="lt-info">Generating Cryptographic Nonce (32-byte)</span>');
+                gwLog('>> Sending Challenge to Device (HTTPS)');
+                gwStatus('ZKP PENDING', 'gw-wait');
+                gwIcon('🔐');
                 document.getElementById('zkp-card').style.display = 'block';
             },
             undo() {
                 setStepHighlight('good-s1', 'active');
                 setStepHighlight('good-s2', null);
                 document.getElementById('zkp-card').style.display = 'none';
-                document.getElementById('gw-log').innerHTML = '<span class="gl gl-info"># Gateway ready</span>';
-                gwStatus('Waiting...', 'gw-neutral');
-                gwIcon('\u23f3');
+                gwStatus('Processing Request', 'gw-wait');
             }
         },
         {
-            label: 'Attacker waits — no SMS arrives. The system uses cryptographic challenge-response, not OTP',
+            label: 'Attacker waits for SMS... (Silence)',
             apply() {
                 setStepHighlight('good-s2', 'done');
-                laptopLine('<span class="lt-warn">[!] Waiting for OTP intercept...</span>');
-                laptopLine('<span class="lt-err">[-] No SMS received. System uses ZKP \u2014 no OTP sent!</span>');
-                attScreen('ERROR: No OTP\n\nSystem uses crypto\nchallenge-response.\nNo SMS channel.\n\nAttempting signature\nforgery...');
+                laptopLine('<span class="lt-warn">[!] Monitoring GSM channels for SMS...</span>');
+                laptopLine('...');
+                laptopLine('<span class="lt-err">[-] 10s Timeout: No SMS detected</span>');
             },
             undo() {
                 setStepHighlight('good-s2', 'active');
-                attScreen('SIM SWAP ACTIVE\n\nTarget routed to\nrogue Airtel SIM\n\nAwaiting OTP...');
                 const t = document.getElementById('laptop-term');
-                t.removeChild(t.lastChild);
-                t.removeChild(t.lastChild);
+                t.removeChild(t.lastChild); t.removeChild(t.lastChild); t.removeChild(t.lastChild);
             }
         },
         {
-            label: 'Victim\'s browser signs the challenge with their private key (ECDSA P-256)',
+            label: 'Victim Device Signs Challenge (Secure Enclave)',
+            apply() {
+                document.getElementById('zkp-label').innerHTML = 'Deriving private key from hardware...';
+                setTimeout(() => {
+                    if (currentStep > 5) document.getElementById('zkp-ring').classList.add('done'); // Hack to prevent async glitch
+                }, 500);
+            },
+            undo() {
+                document.getElementById('zkp-label').innerHTML = 'Signing with Secure Enclave...';
+                document.getElementById('zkp-ring').classList.remove('done');
+            }
+        },
+        {
+            label: 'Signature Generation Complete',
             apply() {
                 setStepHighlight('good-s3', 'active');
-                gwLog('<span class="gl-info">[22:07:16] Signature received from client</span>');
-                document.getElementById('zkp-ring').className = 'zkp-ring done';
-                document.getElementById('zkp-check').className = 'zkp-check show';
-                document.getElementById('zkp-label').innerHTML = 'Signed successfully<br><span style="font-size:.55rem;color:#27ae60;">ECDSA P-256 \u2713</span>';
+                document.getElementById('zkp-ring').classList.add('done');
+                document.getElementById('zkp-check').style.opacity = '1';
+                document.getElementById('zkp-label').innerHTML = 'Signed Successfully<br><span style="color:#27ae60;font-weight:700">ECDSA P-256 ✓</span>';
+                gwLog('Receiving Signed Response...');
             },
             undo() {
                 setStepHighlight('good-s3', null);
-                const log = document.getElementById('gw-log');
-                log.removeChild(log.lastChild);
-                document.getElementById('zkp-ring').className = 'zkp-ring';
-                document.getElementById('zkp-check').className = 'zkp-check';
-                document.getElementById('zkp-label').innerHTML = 'Signing with device key\u2026<br><span style="font-size:.55rem;color:#aaa;">ECDSA P-256</span>';
+                document.getElementById('zkp-check').style.opacity = '0';
             }
         },
         {
-            label: 'Attacker tries to forge the ECDSA signature — computationally infeasible (2²⁵⁶ key space)',
+            label: 'Attacker attempts brute-force (Impossible)',
             apply() {
-                laptopLine('<span class="lt-warn">[*] Brute-forcing ECDSA P-256...</span>');
-                laptopLine('<span class="lt-err">[-] Infeasible \u2014 2\u00b2\u2075\u2076 key space</span>');
-                laptopLine('<span class="lt-err">[-] Forged signature REJECTED by server</span>');
-                attScreen('BLOCKED\n\nSignature forgery\nFAILED.\n\nECDSA P-256 is\ncomputationally\ninfeasible to break.\n\nSIM swap: irrelevant.\nNo private key.');
+                laptopLine('<span class="lt-info">[*] Attempting replay attack...</span>');
+                laptopLine('<span class="lt-err">[-] FAILED: Challenge is unique per session</span>');
+                laptopLine('<span class="lt-info">[*] Attempting key derivation...</span>');
+                laptopLine('<span class="lt-err">[-] FAILED: Private key not in SIM</span>');
             },
             undo() {
-                attScreen('ERROR: No OTP\n\nSystem uses crypto\nchallenge-response.\nNo SMS channel.\n\nAttempting signature\nforgery...');
                 const t = document.getElementById('laptop-term');
-                t.removeChild(t.lastChild);
-                t.removeChild(t.lastChild);
-                t.removeChild(t.lastChild);
+                for (let i = 0; i < 4; i++) t.removeChild(t.lastChild);
             }
         },
         {
-            label: '🔒 ATTACKER BLOCKED — Victim authenticated, attacker gets HTTP 403 Forbidden',
+            label: 'Gateway Verifies Geometric Proof',
+            apply() {
+                gwLog('Verifying Signature against Public Key...');
+                gwLog('<span class="lt-ok">MATH CHECK: VALID</span>');
+                gwLog('Checking ML Risk Score...');
+                gwLog('Risk Score: 0.05 (Low)');
+            },
+            undo() {
+                const l = document.getElementById('gw-log');
+                for (let i = 0; i < 4; i++) l.removeChild(l.lastChild);
+            }
+        },
+        {
+            label: '🔓 Victim Authenticated (Attacker Blocked)',
             apply() {
                 setStepHighlight('good-s3', 'done');
                 setStepHighlight('good-s4', 'active');
-                gwLog('<span class="gl-ok">[22:07:17] Victim sig: VALID \u2713</span>');
-                gwLog('<span class="gl-err">[22:07:17] Attacker sig: INVALID \u2717</span>');
-                gwLog('<span class="gl-err">[22:07:17] HTTP 403 FORBIDDEN</span>');
-                gwStatus('Attacker Blocked \u2717', 'gw-err');
-                gwIcon('\ud83d\udeab');
-                setStepHighlight('good-s4', 'done');
-                const pill = document.getElementById('v-status-pill');
-                pill.className = 'status-pill pill-ok';
-                pill.textContent = '\u2713 Authenticated';
+
+                gwStatus('VICTIM VERIFIED', 'gw-ok');
+                gwIcon('✅');
+
                 document.getElementById('v-status-wrap').style.display = 'block';
-                const btn = document.getElementById('v-action-btn');
-                btn.className = 'app-action-btn btn-green';
-                btn.textContent = 'Access Granted \u2014 View Aadhaar';
-                btn.style.display = 'block';
+                document.getElementById('v-action-btn').style.display = 'block';
                 document.getElementById('result-good').classList.add('show');
+
+                laptopLine('<span class="lt-err">[FATAL] Auth Failed. Server rejected request.</span>');
             },
             undo() {
                 setStepHighlight('good-s3', 'active');
                 setStepHighlight('good-s4', null);
-                const log = document.getElementById('gw-log');
-                log.removeChild(log.lastChild);
-                log.removeChild(log.lastChild);
-                log.removeChild(log.lastChild);
-                gwStatus('Challenge Issued', 'gw-wait');
-                gwIcon('\ud83d\udd10');
+                gwStatus('ZKP PENDING', 'gw-wait');
+                gwIcon('🔐');
                 document.getElementById('v-status-wrap').style.display = 'none';
                 document.getElementById('v-action-btn').style.display = 'none';
                 document.getElementById('result-good').classList.remove('show');
+                const t = document.getElementById('laptop-term');
+                t.removeChild(t.lastChild);
             }
         }
     ];
@@ -441,3 +560,20 @@ function buildStepsB() {
 // ── INIT ──
 steps = buildStepsA();
 updateNav();
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', (e) => {
+    // Ignore if typing in an input/textarea
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.key.toLowerCase()) {
+        case 'd':
+        case 'arrowright':
+            goNext(); break;
+        case 'a':
+        case 'arrowleft':
+            goPrev(); break;
+        case ' ':
+            e.preventDefault();
+            togglePlay(); break;
+    }
+});

@@ -5,7 +5,7 @@ This project prototype demonstrates a machine learning-based "Privacy Wrapper" f
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Prerequisites
 Ensure you have Python 3.8+ installed.
@@ -30,17 +30,17 @@ python train_model.py
 
 ---
 
-## 🖥️ Running the Demo
+## Running the Demo
 
 ### Option 1: Automated Launch (Recommended)
 Simply run the included batch file to start everything:
 ```bash
 start_system.bat
 ```
-*This will launch the API Gateway and open all three interfaces (Portal, Hacker Console, Dashboard) in your browser.*
+*This will launch the API Gateway and open all necessary interfaces in your browser.*
 
 ### Option 2: Manual Launch
-For manual control, open **2 separate terminal windows**:
+For manual control, open two separate terminal windows:
 
 #### Terminal 1: The API Gateway (Backend)
 Start the FastAPI server that processes verification requests.
@@ -60,22 +60,47 @@ python attacker.py
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
-### Core Files
-- `config.py`: Configuration settings (thresholds, paths)
-- `generate_data.py`: Creates synthetic training data
+### Core System
+- `config.py`: Configuration settings (thresholds, file paths)
+- `generate_data.py`: Creates synthetic training data for the model
 - `train_model.py`: Trains the Isolation Forest model
 - `app.py`: The security middleware (FastAPI backend)
 - `attacker.py`: The attack simulation tool
 - `crypto_utils.py`: Cryptographic utilities for Zero-Knowledge Proof (ZKP) authentication
 - `test_zkp_integration.py`: Integration tests for the complete ZKP flow
-- `zkp_simulation.py`: A simple demo of Zero Knowledge Proofs
-- `start_system.bat`: Automated system launcher
+- `zkp_simulation.py`: A simple command-line demonstration of Zero Knowledge Proofs
+- `start_system.bat`: Automated system launcher script
+- `requirements.txt`: Python package dependencies
 
-### Frontend (static/)
-- `portal/`: Government portal simulation
-  - `zkp-client.js`: Client-side ZKP library for key generation and cryptographic signing
-- `hacker/`: Hacker console interface
-- `dashboard/`: Real-time security monitoring dashboard (HTML/JS/Chart.js)
-- `compare/`: Security architecture comparison UI (Legitimate vs. Attack scenarios)
+### Frontend (`static/`)
+
+The application serves multiple distinct frontend modules, organized by functional area:
+
+#### 1. Portal (`static/portal/`)
+Government portal simulation.
+- `index.html`: Main portal interface
+- `zkp-client.js`: Client-side ZKP library for key generation and cryptographic signing
+- `timer-worker.js`: Web worker for portal session timeouts
+- `ashoka_emblem.svg`: Interface graphical asset
+
+#### 2. Hacker Interface (`static/hacker/`)
+Hacker console interface simulation.
+- `index.html`: Automated attack simulation interface
+
+#### 3. Dashboard (`static/dashboard/`)
+Real-time security monitoring dashboard.
+- `index.html`: Main dashboard view
+- `script.js`: Dashboard logic, charting, and real-time updates
+- `style.css`: Dashboard styling
+
+#### 4. Architecture Comparison (`static/compare/`)
+Security architecture comparison UI (Legitimate vs. Attack scenarios).
+- `index.html`: Comparison interface
+- `compare.js`: Comparison logic and animations
+- `style.css`: Comparison styling
+
+#### 5. ZKP Demo (`static/demo/`)
+Visual ZKP security demonstration.
+- `index.html`: Interactive ZKP demonstration showcasing security layers
